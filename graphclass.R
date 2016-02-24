@@ -13,6 +13,8 @@ graphclass <- function(X = NULL, Adj_list = NULL, Y = Y, Xtest = NULL, Ytest = N
   source("FISTA_line_search_union.R")
   source("Logistic_group_lasso.R")
   source("Logistic_union_group_lasso.R")
+  lambda1 = 2*lambda1/(NODES*(NODES-1))
+  lambda2 = lambda2/((NODES)*(NODES-1))
   # Dependent data
   if(!is.null(X)) {
     # ncols = N*(N-1)/2
