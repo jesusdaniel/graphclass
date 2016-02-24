@@ -37,7 +37,11 @@ graphclass <- function(X = NULL, Adj_list = NULL, Y = Y, Xtest = NULL, Ytest = N
       beta_start <- rep(0,NODES*(NODES-1)/2)
       b_start <- 0
       MAX_ITER <- 300;    CONV_CRIT <- 1e-05;   MAX_TIME = Inf
-    }
+    }else{if(is.null(params$beta_start)) {
+      beta_start <- rep(0,NODES*(NODES-1)/2)
+      b_start <- 0
+      MAX_ITER <- params$MAX_ITER;    CONV_CRIT <- params$CONV_CRIT;   MAX_TIME = params$MAX_TIME
+    }}
     gl = logistic_group_lasso(X, Y, D,
                               lambda1 = lambda1, lambda2 = lambda2,
                               id, verbose, beta_start = beta_start, b_start = b_start,
@@ -68,7 +72,11 @@ graphclass <- function(X = NULL, Adj_list = NULL, Y = Y, Xtest = NULL, Ytest = N
       beta_start <- rep(0,NODES*(NODES-1))
       b_start <- 0
       MAX_ITER <- 300;    CONV_CRIT <- 1e-05;   MAX_TIME = Inf
-    }
+    }else{if(is.null(params$beta_start)) {
+      beta_start <- rep(0,NODES*(NODES-1))
+      b_start <- 0
+      MAX_ITER <- params$MAX_ITER;    CONV_CRIT <- params$CONV_CRIT;   MAX_TIME = params$MAX_TIME
+    }}
     gl = logistic_union_group_lasso(X, Y, D,
                               lambda1 = lambda1, lambda2 = lambda2,
                               id, verbose, beta_start = beta_start, b_start = b_start,
