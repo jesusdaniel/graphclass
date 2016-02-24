@@ -38,7 +38,7 @@ fista_line_search_union <- function(proximal_f,b_step,f,grad_f,penalty, x_start,
       Xy = X%*%crossprod(D,y)
       if(f(Xbeta,b) <= as.double(f(Xy,b) +t(grad_f(Xy,b))%*%(z-y) + 1/(2*tk) * norm_s(z-y)^2))
         break #tk = 1/beta_step*tk
-      cat("  ...trying new tk\tt =",proc.time()[1]-time_start, "\n")
+      #cat("  ...trying new tk\tt =",proc.time()[1]-time_start, "\n")
       tk = beta_step*tk
     }
     
