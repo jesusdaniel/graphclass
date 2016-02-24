@@ -25,8 +25,8 @@ u = graphclass(X[train_population,],    # Matrix with network samples by row, wi
                Y = Y[train_population], # Binary response
                Xtest = X[test_population,],  #Test matrix
                Ytest = Y[test_population],   # Test response
-               type = "union",               # One between "union" and "intersection"
-               lambda1=1, lambda2=5,  # Lambda1 (Lasso parameter) and Lambda2 (group lasso parameter)
+               type = "intersection",               # One between "union" and "intersection"
+               lambda1=2, lambda2=5,  # Lambda1 (Lasso parameter) and Lambda2 (group lasso parameter)
                params = NULL,               # List of parameters for optimization algorithm
                                             # If not provided, default parameters: MAX_ITER =300,  CONV_CRIT = 1e-05,   MAX_TIME = Inf
                id = "", verbose = T,       # verbose = T, then prints progress on every iteration, id identifies job when multiple jobs are running
@@ -36,5 +36,5 @@ u$train_error
 u$test_error
 source("Plots.R")
 plot_adjmatrix(u$beta,
-               type = "union") # Plot Adjacency matrix, depending whether is union or intersection solution
+               type = "intersection") # Plot Adjacency matrix, depending whether is union or intersection solution
 

@@ -11,19 +11,18 @@ logistic_group_lasso <- function(X,Y, D, lambda1, lambda2,
   # Define functions wrt X,Y,D---------------------------------------------------------------
   # B derivative, B hessian------------------------------------------------------------------
   #Derivative
-  b_derivative = function(beta,b)
-    sum(-Y/(1+exp(Y*(X%*%beta+b))))/n
+  b_derivative = function(Xbeta,b)
+    sum(-Y/(1+exp(Y*(Xbeta+b))))/n
   #Hessian
-  b_hessian = function(beta,b)
-    sum(1/(exp(-Y*(X%*%beta+b))+exp(Y*(X%*%beta+b))+2))/n
+  b_hessian = function(Xbeta,b)
+    sum(1/(exp(-Y*(Xbeta+b))+exp(Y*(Xbeta+b))+2))/n
   
   # Beta derivative -------------------------------------------------------------------------
-  grad_f <- function(beta,b) 
-    -crossprod(X,Y/(1+exp(Y*(X%*%beta+b))))/n
-  
+  grad_f <- function(Xbeta,b) 
+    -crossprod(X,Y/(1+exp(Y*(Xbeta+b))))/n
   # F evaluation-----------------------------------------------------------------------------
-  f = function(beta,b)
-    sum(log(1+exp(-Y*(X%*%beta+b))))/n
+  f = function(Xbeta,b)
+    sum(log(1+exp(-Y*(Xbeta+b))))/n
   penalty = function(beta,b)
     lambda1*sum(abs(beta)) + lambda2*gl_penalty.c(D%*%beta)
 
@@ -40,17 +39,17 @@ logistic_group_lasso <- function(X,Y, D, lambda1, lambda2,
       return(list(x=u))
     }
   }
-  b_step <- function(beta, b_start = 0) {
+  b_step <- function(Xbeta, b_start = 0) {
     TOL_B = 1e-04; MAX_S_B = 100
     b_n = b_start
     i = 0
     b_deriv = Inf    
     while(abs(b_deriv)>TOL_B & i < MAX_S_B) {
-      b_deriv = b_derivative(beta,b_n)
-      b_n = b_n - b_deriv/(b_hessian(beta,b_n)+1*(abs(b_deriv/b_hessian(beta,b_n))>100))
+      b_deriv = b_derivative(Xbeta,b_n)
+      b_n = b_n - b_deriv/(b_hessian(Xbeta,b_n)+1*(abs(b_deriv/b_hessian(Xbeta,b_n))>100))
       if(abs(b_n)>1000){
         warning("The intercept is too big: ",b_n,"\n  Derivative = ",b_deriv,
-                "\n  Hessian = ", b_hessian(beta,b_n))
+                "\n  Hessian = ", b_hessian(Xbeta,b_n))
       }
       i = i+1
     }
