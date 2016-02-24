@@ -28,7 +28,7 @@ graphclass <- function(X = NULL, Adj_list = NULL, Y = Y, Xtest = NULL, Ytest = N
   Y <- (Y-min(Y))/(max(Y)-min(Y))
   Y <- 2*Y-1
   # Create D
-  if(is.null(D)) D <- construct_D(NODES)$D
+  if(is.null(D)) D <- construct_D(NODES)
   # Check which method to use
   # Intersection penalty -----------------------------------------------
   if(type=="intersection") {
@@ -104,8 +104,7 @@ construct_D <- function(nodes = 264) {
   D <- Matrix(0, nrow=nodes*(nodes-1), ncol = nodes*(nodes-1)/2)
   for(i in 1:nodes) {
     D[((i-1)*(nodes-1)+1):(i*(nodes-1)),B[i,-i]] <- diag(nodes-1)
-    #print(i)
   }
-  d2 <- lapply(1:nodes,function(i) ((i-1)*(nodes-1)+1):(i*(nodes-1)))
-  return(list(D=D,d2 = d2))
+  #d2 <- lapply(1:nodes,function(i) ((i-1)*(nodes-1)+1):(i*(nodes-1)))
+  return(D)
 }

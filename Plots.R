@@ -7,7 +7,7 @@ plot_adjmatrix <- function(beta, type="intersection") {
     Adj_matr <- Adj_matr + t(Adj_matr)  
   }else{if(type=="union") {
     NODES <- (1+sqrt(1+8*length(beta)/2))/2
-    D <- construct_D(NODES)$D
+    D <- construct_D(NODES)
     v = crossprod(D,beta)
     Adj_matr = array(0,dim = c(NODES, NODES))
     Adj_matr[upper.tri(Adj_matr)] = as.vector(v)
@@ -31,7 +31,7 @@ plot_adj_community <- function(beta, communities, type="intersection") {
     Adj_matr <- Adj_matr + t(Adj_matr)  
   }else{if(type=="union") {
     NODES <- (1+sqrt(1+8*length(beta)/2))/2
-    D <- construct_D(NODES)$D
+    D <- construct_D(NODES)
     v = crossprod(D,beta)
     Adj_matr = array(0,dim = c(NODES, NODES))
     Adj_matr[upper.tri(Adj_matr)] = as.vector(v)
