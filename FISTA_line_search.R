@@ -46,7 +46,7 @@ fista_line_search <- function(proximal_f,b_step,f,grad_f,penalty, x_start, b_sta
     tks = c(tks,tk)
     xk1 = z;    criterion = norm_s(xk1-xk)
     crits = c(crits,criterion)
-    newf = f(xk1,b) + penalty(xk1,b)
+    newf = f(Xbeta,b) + penalty(xk1,b)
     if(crit_f>0) #crit_f = newf above
        crit_f = abs(newf - crit_f)/crit_f
     if(newf < best_f) {
