@@ -5,6 +5,7 @@ ADMM_grouplasso_weights <- function(y, D, omega1, omega2,
                                MAX_ITER = 200, TOL = 10^(-7),
                                rho = 1, features=NULL,
                                beta_start = NULL) {
+  #browser()
   require(Matrix)
   n = length(y) 
   m = nrow(D)

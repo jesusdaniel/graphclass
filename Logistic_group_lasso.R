@@ -67,6 +67,7 @@ logistic_group_lasso <- function(X,Y, D, lambda1, lambda2,
 
 library(compiler)
 norm_s = function(x) sqrt(sum(x^2))
+logistic_group_lasso = cmpfun(logistic_group_lasso, options = list(optimize = 3))
 norm_s = cmpfun(norm_s, options = list(optimize = 3))
 
 # Things it should return:
