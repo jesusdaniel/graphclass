@@ -31,7 +31,7 @@ gc_intersection = graphclass(X[train_population,],    # Matrix with network samp
                              lambda1=4, lambda2=4,  # Lambda1 (Lasso parameter) and Lambda2 (group lasso parameter)
                              params = list(MAX_ITER =200, CONV_CRIT = 1e-05, MAX_TIME = Inf),               # List of parameters for optimization algorithm
                              # If not provided, default parameters: MAX_ITER =300,  CONV_CRIT = 1e-05,   MAX_TIME = Inf
-                             id = "", verbose = F,       # verbose = T, then prints progress on every iteration, id identifies job when multiple jobs are running
+                             id = "", verbose = T,       # verbose = T, then prints progress on every iteration, id identifies job when multiple jobs are running
                              D = NULL)
 
 gc_intersection$train_error
@@ -45,15 +45,15 @@ plot_node_degree(gc_intersection$beta, "intersection")
 
 # Union example
 gc_union = graphclass(X[train_population,],    # Matrix with network samples by row, with upper triangle of the adjacency in column
-               Y = Y[train_population], # Binary response
-               Xtest = X[test_population,],  #Test matrix
-               Ytest = Y[test_population],   # Test response
-               type = "union",               # One between "union" and "intersection"
-               lambda1=1, lambda2=2,  # Lambda1 (Lasso parameter) and Lambda2 (group lasso parameter)
-               params = NULL,               # List of parameters for optimization algorithm
-               # If not provided, default parameters: MAX_ITER =300,  CONV_CRIT = 1e-05,   MAX_TIME = Inf
-               id = "", verbose = F,       # verbose = T, then prints progress on every iteration, id identifies job when multiple jobs are running
-               D = NULL)                  # For big networks, D can be constructed with D = construct_D(number of nodes), and provided each time function is called
+                      Y = Y[train_population], # Binary response
+                      Xtest = X[test_population,],  #Test matrix
+                      Ytest = Y[test_population],   # Test response
+                      type = "union",               # One between "union" and "intersection"
+                      lambda1=1, lambda2=2,  # Lambda1 (Lasso parameter) and Lambda2 (group lasso parameter)
+                      params = NULL,               # List of parameters for optimization algorithm
+                      # If not provided, default parameters: MAX_ITER =300,  CONV_CRIT = 1e-05,   MAX_TIME = Inf
+                      id = "", verbose = T,       # verbose = T, then prints progress on every iteration, id identifies job when multiple jobs are running
+                      D = NULL)                  # For big networks, D can be constructed with D = construct_D(number of nodes), and provided each time function is called
 
 gc_union$train_error
 gc_union$test_error
@@ -62,4 +62,26 @@ plot_adjmatrix(gc_union$beta,
                type = "union") # Plot Adjacency matrix, depending whether is union or intersection solution
 
 plot_node_degree(gc_union$beta, "union")
+
+
+
+# Fusion example
+gc_fusion = graphclass(X[train_population,],    # Matrix with network samples by row, with upper triangle of the adjacency in column
+                      Y = Y[train_population], # Binary response
+                      Xtest = X[test_population,],  #Test matrix
+                      Ytest = Y[test_population],   # Test response
+                      type = "fusion",               # One between "union" and "intersection"
+                      lambda1=0.2, lambda2=0.1,  # Lambda1 (Lasso parameter) and Lambda2 (group lasso parameter)
+                      params = NULL,               # List of parameters for optimization algorithm
+                      # If not provided, default parameters: MAX_ITER =300,  CONV_CRIT = 1e-05,   MAX_TIME = Inf
+                      id = "", verbose = T,       # verbose = T, then prints progress on every iteration, id identifies job when multiple jobs are running
+                      D = NULL)                  # For big networks, D can be constructed with D = construct_D(number of nodes), and provided each time function is called
+
+gc_fusion$train_error
+gc_fusion$test_error
+
+plot_adjmatrix(gc_fusion$beta,
+               type = "intersection") # Plot Adjacency matrix, depending whether is union or intersection solution
+
+plot_node_degree(gc_fusion$beta, "intersection")
 
