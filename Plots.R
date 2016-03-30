@@ -18,10 +18,10 @@ plot_adjmatrix <- function(beta, type="intersection") {
   }else{
     stop("The value of type should be one between \"intersection\" and \"union\"")
   }}
-  cuts = 100
+  cuts = min(100, length(unique(beta))/2)
   df = (Adj_matr)
   df <- df[,seq(from=ncol(df),to=1,by=-1)] #reversing the columns
-  levelplot(df, at = c(seq(min(Adj_matr),-1e-10,length.out =cuts),0,seq(1e-10,max(Adj_matr),length.out =cuts)),
+  levelplot(df, at = unique(c(seq(min(Adj_matr),max(-1e-10,min(Adj_matr)),length.out =cuts),0,seq(1e-10,max(Adj_matr),length.out =cuts))),
             xlab = "Nodes", ylab = "Nodes",
             col.regions = c(rgb((cuts:0)/cuts, green = 0, blue = 1,red = 0),rgb(red = 0,green = 0, blue = 0),
                             rgb((0:cuts)/cuts, green = 0, blue = 0,red = 1)),
