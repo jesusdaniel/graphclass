@@ -4,7 +4,7 @@
 ADMM_grouplasso_weights <- function(y, D, omega1, omega2, 
                                MAX_ITER = 200, TOL = 10^(-7),
                                rho = 1, features=NULL,
-                               beta_start = NULL) {
+                               beta_start = NULL, NODES) {
   #browser()
   require(Matrix)
   n = length(y) 
@@ -23,7 +23,7 @@ ADMM_grouplasso_weights <- function(y, D, omega1, omega2,
   qk = q;   rk = r
   u = rep(0,n);  v = rep(0,m)
   iter = 1
-  phi_beta_k = 0.5*norm_s(y-beta)^2+omega1*sum(abs(beta))+omega2*gl_penalty.c(D%*%beta)
+  phi_beta_k = 0.5*norm_s(y-beta)^2+omega1*sum(abs(beta))+omega2*gl_penalty.c(D%*%beta,NODES)
   conv_crit = Inf
   sk  = Inf;   resk = Inf
   # MONITOR BEST BETA  ----------------------------------------------------------
@@ -37,12 +37,12 @@ ADMM_grouplasso_weights <- function(y, D, omega1, omega2,
     # update r
     Dbeta = D%*%beta#<-----------
     Dbetavrho = as.vector(Dbeta+ v/rho)#<-----------
-    r = l2_Db_soft_thresholding.c(Dbetavrho,omega2/rho)
+    r = l2_Db_soft_thresholding.c(Dbetavrho,omega2/rho, NODES)
     u = u + rho*(beta-q)#<-----------
     v = v + rho*(Dbeta-r)#<-----------    
     # Update convergence criterias --------------------------------------
     phi_beta_k1 = as.numeric( 1/2 * norm_s(beta-y)^2 + 
-                                omega1*sum(abs(beta)) +omega2*gl_penalty.c(Dbeta))
+                                omega1*sum(abs(beta)) +omega2*gl_penalty.c(Dbeta, NODES))
     
     sk = rho * (max(abs(q-qk))+max(abs(crossprod(D,r-rk))))#<-----------
     res1k = norm_s(beta-q);   res2k = norm_s(Dbeta-r)
@@ -60,7 +60,7 @@ ADMM_grouplasso_weights <- function(y, D, omega1, omega2,
   # selects best beta between final beta, best_beta, and q
   beta_q = beta; beta_q[which(q==0)] = 0
   phi_beta_q = as.numeric(1/2*norm_s(beta_q-y)^2 + omega1*sum(abs(beta_q)) + 
-                            omega2*gl_penalty.c(D%*%beta_q))
+                            omega2*gl_penalty.c(D%*%beta_q, NODES))
   whichm = which.min(c(phi_beta_k1,best_phi,phi_beta_q))
   if(whichm==1) {
     best_beta = beta

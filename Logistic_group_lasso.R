@@ -24,14 +24,14 @@ logistic_group_lasso <- function(X,Y, D, lambda1, lambda2,
   f = function(Xbeta,b)
     sum(log(1+exp(-Y*(Xbeta+b))))/n
   penalty = function(beta,b)
-    lambda1*sum(abs(beta)) + lambda2*gl_penalty.c(D%*%beta)
+    lambda1*sum(abs(beta)) + lambda2*gl_penalty.c(D%*%beta, NODES)
 
   
   #Proximal and b step-----------------------------------------------------------------------
   proximal <- function(u,lambda,beta_startprox = NULL,tol = 1e-07) {
     if(lambda2>0){
       gl = ADMM_grouplasso_weights(y=u,D,omega1 = lambda*lambda1, omega2 = lambda*lambda2,
-                                   beta_start=beta_startprox, TOL = tol,rho = rho)
+                                   beta_start=beta_startprox, TOL = tol,rho = rho, NODES = NODES)
       return(list(x = gl$best_beta, q = gl$q, r = gl$r))
     }else if(lambda1>0){
       return(list(x = sign(u)*pmax(abs(u)-(lambda1*lambda),0)))
@@ -99,9 +99,9 @@ soft_thresholdingl2 = function(x, lambda) {
   else
     return(x*(1-lambda/norm_s(x)))
 }
-gl_penalty.c = function(Db) {
+gl_penalty.c = function(Db, NODES) {
   browser()
-  gl = 0;
+  gl = 0
   .C("group_lasso_node_penalty",Db=as.double(Db),N = as.integer(NODES), gl = as.double(gl))$gl
 }
 l2_soft_thresholding.c = function(x, lambda) {
@@ -109,7 +109,7 @@ l2_soft_thresholding.c = function(x, lambda) {
   .C("l2_soft_thresholding", x = as.double(x), lambda = as.double(lambda), n = as.integer(n))$x
 }
 
-l2_Db_soft_thresholding.c = function(Db,lambda) {  
+l2_Db_soft_thresholding.c = function(Db,lambda, NODES) {  
   n = NODES
   .C("l2_node_soft_ghtesholding", 
      Db = as.double(Db), N=as.integer(n), lambda = as.double(lambda))$Db
