@@ -1,0 +1,13 @@
+Package: graphclass
+Title: Network classification
+Version: 1.0
+Date: 2017-20-02
+Authors@R: person("Jesús Daniel", "Arroyo Relión", email = "jarroyor@umich.edu", role = c("aut", "cre"))
+Maintainer: Jesus Arroyo <jarroyor@umich.edu>
+Description: Network classification with applications to brain connectomics.
+Depends: R (>= 3.3.2)
+Suggests: Matrix
+License: What license is it under?
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 6.0.0.9000

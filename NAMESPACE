@@ -1,0 +1,7 @@
+useDynLib(graphclass)
+export(graphclass)
+export(gc_predict)
+export(construct_D)
+export(plot_adjmatrix)
+export(plot_square_adj_mat)
+export(get_matrix)

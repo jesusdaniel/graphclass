@@ -1,0 +1,226 @@
+# https://cran.r-project.org/web/packages/roxygen2/vignettes/rd.html
+# R CMD Rd2pdf --pdf --title=graphclass -o graphclass.pdf man/*.Rd
+#' Train a graph classifier using regularized logistic regression.
+#'
+#' @param X A matrix with the training sample, in wich each row represents a vectorized (by column order) upper triangular part of a network.
+#' @param Adj_list A list of of symmetric matrices with 0 diagonal for training the classifier
+#' @param Y A vector containing the class labels of the training sample (for now only 2 classes are supported).
+#' @param Xtest A optional test matrix.
+#' @param Ytest Labels of test set.
+#' @param type should be either "intersection", "union" or "fusion", only "intersection" is currently supported.
+#' @param lambda penalty parameter \eqn{lambda}, by default is set to 0.
+#' @param rho penalty parameter \eqn{rho} controlling sparsity, by default is set to 0.
+#' @param gamma ridge parameter (for numerical purposes).
+#' @param params A list containing threshold parameters for the algorithm (see details)
+#' @param verbose whether output is printed
+#' @param D matrix \eqn{D} of the penalty; precomputing it can save time.
+#' @return An object containing the trained graph classifier.
+#' @examples
+#' X = matrix(rnorm(100*34453), nrow = 100)
+#' Y = 2*(runif(100) > 0.5) - 1
+#' gc = graphclass(X, Y = Y)
+#' gc$train_error
+# Params: 
+# - beta_start, b_start, MAX_ITER, CONV_CRIT, MAX_TIME
+graphclass <- function(X = NULL, Adj_list = NULL, 
+                       Y = NULL, Xtest = NULL, Ytest = NULL,
+                       type = "intersection",
+           lambda1 = NULL, lambda2 = NULL, 
+           lambda = 0, rho = 0,
+           gamma = 1e-5, 
+           params = NULL, id = "", verbose = F, D = NULL) {
+  if(is.null(lambda1) | is.null(lambda2)) {
+    lambda2 <- lambda
+    lambda1 <- lambda*rho
+  }else {
+    lambda <- lambda2
+    rho <- lambda1/lambda2
+  }
+  gl_results = list()
+  gl_results$lambda <- lambda
+  gl_results$rho <- rho
+  gl_results$lambda1 <- lambda1
+  gl_results$lambda2 <- lambda2
+  gl_results$gamma <- gamma
+  # Dependent data
+  if(!is.null(X)) {
+    # ncols = N*(N-1)/2
+    NODES <- (1+sqrt(1+8*ncol(X)))/2
+  }else{
+    NODES <- ncol(Adj_list[[1]])
+    X <- t(sapply(Adj_list, function(A) A[upper.tri(A)]))
+  }
+  Yoriginal <- Y
+  Y <- as.numeric(Y)
+  Y <- (Y-min(Y))/(max(Y)-min(Y))
+  Y <- 2*Y-1
+  gl_results$Ypos_label <- unique(Yoriginal[Y==1])[1]
+  gl_results$Yneg_label <- unique(Yoriginal[Y==-1])[1]
+  table(Y, Yoriginal)
+  # Normalize X for numerical stability
+  alpha_normalization <- max(apply(X, 2, function(v) sd(v)))
+  X <- X/alpha_normalization
+  lambda1 <- lambda1/alpha_normalization
+  lambda2 <- lambda2/alpha_normalization
+  gamma <- gamma/alpha_normalization
+  # Create D
+  if(is.null(D)) {
+    if(type=="intersection"| type=="union") {
+      D <- construct_D(NODES)  
+    }else{
+      if(type=="fusion")
+        D <- construct_D_fusion(NODES)
+      else{
+        stop("The value of type should be one 
+             between \"intersection\", \"union\" or \"fusion\".")
+      }
+    }
+  }
+  # Check which method to use
+  # Intersection penalty -----------------------------------------------
+  if(type=="intersection") {
+    # Check params
+    if(is.null(params)){
+      beta_start <- rep(0,NODES*(NODES-1)/2)
+      b_start <- 0
+      MAX_ITER <- 300;    CONV_CRIT <- 1e-05;   MAX_TIME = Inf
+    }else{if(is.null(params$beta_start)) {
+      beta_start <- rep(0,NODES*(NODES-1)/2)
+      b_start <- 0
+      MAX_ITER <- params$MAX_ITER;    CONV_CRIT <- params$CONV_CRIT;   MAX_TIME = params$MAX_TIME
+    }else{
+      beta_start <- params$beta_start*alpha_normalization
+      b_start <- params$b_start
+      MAX_ITER <- params$MAX_ITER;    CONV_CRIT <- params$CONV_CRIT;   MAX_TIME = params$MAX_TIME
+    }}
+    gl = logistic_group_lasso_ridge(X, Y, D,
+                                    lambda1 = lambda1, 
+                                    lambda2 = lambda2, 
+                                    gamma = gamma,
+                                    id, verbose, 
+                                    beta_start = beta_start, 
+                                    b_start = b_start,
+                                    NODES = NODES, 
+                                    MAX_ITER = MAX_ITER, 
+                                    CONV_CRIT = CONV_CRIT, 
+                                    MAX_TIME = MAX_TIME)
+    gl_results$beta = gl$best_beta/alpha_normalization
+    gl_results$b = gl$best_b
+
+    # Train fitting
+    Yfit <- alpha_normalization*(X%*%gl_results$beta) + gl_results$b
+    gl_results$Yfit <- exp(Yfit)/(1+exp(Yfit))
+    gl_results$train_error <- 1- sum(diag(table(sign(Yfit),sign(Y))))/length(Y)
+    # Test fitting
+    if(!is.null(Xtest)) {
+      gc_predict(gl_results, Xtest)
+      Yfit_test <- Xtest%*%gl_results$beta + gl_results$b
+      Ypred <- 1*(Yfit_test>0) -1*(Yfit_test<=0)
+      gl_results$Ypred <- gc_predict(gl_results, Xtest)
+      gl_results$Yfit_test <- gc_predict(gl_results, Xtest, type = "prob")
+      if(!is.null(Ytest)) {
+        gl_results$test_error = gc_predict(gl_results, Xtest, type = "error", Ytest = Ytest)
+      } 
+    }
+    gl_results$type = "intersection"
+    gl_results$active_nodes = active_nodes(gl_results$beta, NODES = NODES)
+    gl_results$subgraph_active_edges_rate = active_edges_rate(gl_results$beta, NODES = NODES)
+    gl_results$nonzeros_percentage = sum(gl_results$beta!=0)/length(gl_results$beta)
+    return(gl_results)
+
+  }else{if(type == "union"){
+    # Union penalty ---------------------------------------------------
+    # Check params
+    if(is.null(params)){
+      beta_start <- rep(0,NODES*(NODES-1))
+      b_start <- 0
+      MAX_ITER <- 300;    CONV_CRIT <- 1e-05;   MAX_TIME = Inf
+    }else{if(is.null(params$beta_start)) {
+      beta_start <- rep(0,NODES*(NODES-1))
+      b_start <- 0
+      MAX_ITER <- params$MAX_ITER;    CONV_CRIT <- params$CONV_CRIT;   MAX_TIME = params$MAX_TIME
+    }else{
+      beta_start <- params$beta_start*alpha_normalization
+      b_start <- params$b_start
+      MAX_ITER <- params$MAX_ITER;    CONV_CRIT <- params$CONV_CRIT;   MAX_TIME = params$MAX_TIME
+    }}
+    gl = logistic_union_group_lasso_ridge(X, Y, D,
+                                          lambda1 = lambda1, 
+                                          lambda2 = lambda2, 
+                                          gamma = gamma,
+                                          id, verbose, 
+                                          beta_start = beta_start, 
+                                          b_start = b_start,
+                                          NODES = NODES, 
+                                          MAX_ITER = MAX_ITER, 
+                                          CONV_CRIT = CONV_CRIT, 
+                                          MAX_TIME = MAX_TIME)
+    gl_results$beta = gl$best_beta/alpha_normalization
+    gl_results$b = gl$best_b
+    # Train fitting
+    Yfit <- alpha_normalization*(X%*%(crossprod(D,gl_results$beta ))) + gl$b
+    gl_results$Yfit <- exp(Yfit)/(1+exp(Yfit))
+    gl_results$train_error <- 1-sum(diag(table(as.vector(sign(gl_results$Yfit-0.5)),sign(Y))))/length(Y)
+    # Test fitting
+    if(!is.null(Xtest)) {
+      Yfit_test <- Xtest%*%crossprod(D,gl_results$beta) + gl_results$b
+      gl_results$Yfit_test <- exp(Yfit_test)/(1+exp(Yfit_test))
+      if(is.factor(Yoriginal)) {
+        gl_results$Ypred <- factor(Ypred)
+        levels(gl_results$Ypred) <- levels(Yoriginal)
+      }
+      if(!is.null(Ytest)) {
+        levels(Ytest) <- c(-1, 1)
+        gl_results$test_error = 1-sum(diag(table(sign(Yfit_test),sign(Ytest))))/length(Ytest)
+      }
+    }
+    gl_results$active_nodes = active_nodes_union(gl_results$beta, NODES = NODES)
+    gl_results$subgraph_active_edges_rate = NULL
+    gl_results$nonzeros_percentage = sum(gl_results$beta!=0)/length(gl_results$beta)
+    gl_results$type = "union"
+    return(gl_results)
+  }else{if(type=="fusion"){
+    # Fusion penalty -----------------------------------------------------------
+    # Check params
+    if(is.null(params)){
+      beta_start <- rep(0,NODES*(NODES-1)/2)
+      b_start <- 0
+      MAX_ITER <- 200;    CONV_CRIT <- 1e-04;   MAX_TIME = Inf
+    }else{if(is.null(params$beta_start)) {
+      beta_start <- rep(0,NODES*(NODES-1)/2)
+      b_start <- 0
+      MAX_ITER <- params$MAX_ITER;    CONV_CRIT <- params$CONV_CRIT;   MAX_TIME = params$MAX_TIME
+    }else{
+      beta_start <- params$beta_start*alpha_normalization
+      b_start <- params$b_start
+      MAX_ITER <- params$MAX_ITER;    CONV_CRIT <- params$CONV_CRIT;   MAX_TIME = params$MAX_TIME
+    }}
+    gl = logistic_fused_lasso(X, Y, D,
+                              lambda1 = lambda1, lambda2 = lambda2,
+                              id, verbose, beta_start = beta_start, b_start = b_start,
+                              NODES = NODES, MAX_ITER = MAX_ITER, 
+                              CONV_CRIT = CONV_CRIT, 
+                              MAX_TIME = MAX_TIME)
+    gl_results$beta = gl$best_beta/alpha_normalization
+    gl_results$b = gl$best_b
+    
+    # Train fitting
+    Yfit <- alpha_normalization*(X%*%gl$best_beta) + gl$b
+    gl_results$Yfit <- exp(Yfit)/(1+exp(Yfit))
+    gl_results$train_error <- 1- sum(diag(table(sign(Yfit),sign(Y))))/length(Y)
+    # Test fitting
+    if(!is.null(Xtest)) {
+      levels(Ytest) <- c(-1, 1)
+      Yfit_test <- Xtest%*%gl_results$beta + gl_results$b
+      gl_results$Yfit_test <- exp(Yfit_test)/(1+exp(Yfit_test))
+      gl_results$test_error = 1-sum(diag(table(sign(Yfit_test),sign(Ytest))))/length(Ytest)
+    }
+    gl_results$type = "intersection"
+    return(gl_results)
+  }else{
+    stop("The value of type should be one between \"intersection\" and \"union\"")
+  }
+  }
+  }
+}
+
