@@ -21,10 +21,10 @@ logistic_union_group_lasso_ridge <- function(X,Y,D, lambda1, lambda2, gamma,
   
   # Beta derivative -------------------------------------------------------------------------
   grad_f <- function(Xbeta,b, beta) 
-    D%*%(-crossprod(X,Y/(1+exp(Y*(Xbeta+b))))/n) + gamma*beta
+    D%*%(-Matrix::crossprod(X,Y/(1+exp(Y*(Xbeta+b))))/n) + gamma*beta
   # F evaluation-----------------------------------------------------------------------------
   f = function(Xbeta,b, beta)
-    sum(log(1+exp(-Y*(Xbeta+b))))/n + gamma/2*crossprod(beta)
+    sum(log(1+exp(-Y*(Xbeta+b))))/n + gamma/2*Matrix::crossprod(beta)
   penalty = function(beta,b)
     lambda1*sum(abs(beta)) + lambda2*gl_penalty.c(beta, NODES)
   

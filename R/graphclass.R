@@ -1,4 +1,5 @@
 # https://cran.r-project.org/web/packages/roxygen2/vignettes/rd.html
+# install.packages(repos=NULL, "graphclass_1.0.tar.gz")
 # R CMD Rd2pdf --pdf --title=graphclass -o graphclass.pdf man/*.Rd
 #' Train a graph classifier using regularized logistic regression.
 #'
@@ -18,29 +19,27 @@
 #' @examples
 #' X = matrix(rnorm(100*34453), nrow = 100)
 #' Y = 2*(runif(100) > 0.5) - 1
-#' gc = graphclass(X, Y = Y)
+#' gc = graphclass(X, Y = factor(Y))
 #' gc$train_error
 # Params: 
 # - beta_start, b_start, MAX_ITER, CONV_CRIT, MAX_TIME
-graphclass <- function(X = NULL, Adj_list = NULL, 
-                       Y = NULL, Xtest = NULL, Ytest = NULL,
+graphclass <- function(X = NULL, Y = NULL,...) {
+  UseMethod("graphclass")
+}
+
+
+#' @rdname graphclass
+#' @export
+graphclass.default <- function(X = NULL, Y = NULL,
+                       Xtest = NULL, Ytest = NULL,
+                       Adj_list = NULL, 
                        type = "intersection",
-           lambda1 = NULL, lambda2 = NULL, 
-           lambda = 0, rho = 0,
-           gamma = 1e-5, 
-           params = NULL, id = "", verbose = F, D = NULL) {
-  if(is.null(lambda1) | is.null(lambda2)) {
-    lambda2 <- lambda
-    lambda1 <- lambda*rho
-  }else {
-    lambda <- lambda2
-    rho <- lambda1/lambda2
-  }
+                       lambda = 0, rho = 0,
+                       gamma = 1e-5, 
+                       params = NULL, id = "", verbose = F, D = NULL,...) {
   gl_results = list()
   gl_results$lambda <- lambda
   gl_results$rho <- rho
-  gl_results$lambda1 <- lambda1
-  gl_results$lambda2 <- lambda2
   gl_results$gamma <- gamma
   # Dependent data
   if(!is.null(X)) {
@@ -60,8 +59,8 @@ graphclass <- function(X = NULL, Adj_list = NULL,
   # Normalize X for numerical stability
   alpha_normalization <- max(apply(X, 2, function(v) sd(v)))
   X <- X/alpha_normalization
-  lambda1 <- lambda1/alpha_normalization
-  lambda2 <- lambda2/alpha_normalization
+  lambda1 <- lambda*rho/alpha_normalization
+  lambda2 <- lambda/alpha_normalization
   gamma <- gamma/alpha_normalization
   # Create D
   if(is.null(D)) {
@@ -106,20 +105,21 @@ graphclass <- function(X = NULL, Adj_list = NULL,
                                     MAX_TIME = MAX_TIME)
     gl_results$beta = gl$best_beta/alpha_normalization
     gl_results$b = gl$best_b
-
+    
     # Train fitting
     Yfit <- alpha_normalization*(X%*%gl_results$beta) + gl_results$b
     gl_results$Yfit <- exp(Yfit)/(1+exp(Yfit))
     gl_results$train_error <- 1- sum(diag(table(sign(Yfit),sign(Y))))/length(Y)
+    class(gl_results) <- "graphclass"
     # Test fitting
     if(!is.null(Xtest)) {
-      gc_predict(gl_results, Xtest)
+      predict.graphclass(gl_results, Xtest)
       Yfit_test <- Xtest%*%gl_results$beta + gl_results$b
       Ypred <- 1*(Yfit_test>0) -1*(Yfit_test<=0)
-      gl_results$Ypred <- gc_predict(gl_results, Xtest)
-      gl_results$Yfit_test <- gc_predict(gl_results, Xtest, type = "prob")
+      gl_results$Ypred <- predict.graphclass(gl_results, Xtest)
+      gl_results$Yfit_test <- predict.graphclass(gl_results, Xtest, type = "prob")
       if(!is.null(Ytest)) {
-        gl_results$test_error = gc_predict(gl_results, Xtest, type = "error", Ytest = Ytest)
+        gl_results$test_error = predict.graphclass(gl_results, Xtest, type = "error", Ytest = Ytest)
       } 
     }
     gl_results$type = "intersection"
@@ -127,7 +127,7 @@ graphclass <- function(X = NULL, Adj_list = NULL,
     gl_results$subgraph_active_edges_rate = active_edges_rate(gl_results$beta, NODES = NODES)
     gl_results$nonzeros_percentage = sum(gl_results$beta!=0)/length(gl_results$beta)
     return(gl_results)
-
+    
   }else{if(type == "union"){
     # Union penalty ---------------------------------------------------
     # Check params
@@ -178,6 +178,7 @@ graphclass <- function(X = NULL, Adj_list = NULL,
     gl_results$subgraph_active_edges_rate = NULL
     gl_results$nonzeros_percentage = sum(gl_results$beta!=0)/length(gl_results$beta)
     gl_results$type = "union"
+    class(gl_results) <- "graphclass"
     return(gl_results)
   }else{if(type=="fusion"){
     # Fusion penalty -----------------------------------------------------------
@@ -195,6 +196,8 @@ graphclass <- function(X = NULL, Adj_list = NULL,
       b_start <- params$b_start
       MAX_ITER <- params$MAX_ITER;    CONV_CRIT <- params$CONV_CRIT;   MAX_TIME = params$MAX_TIME
     }}
+    print(lambda1)
+    print(lambda2)
     gl = logistic_fused_lasso(X, Y, D,
                               lambda1 = lambda1, lambda2 = lambda2,
                               id, verbose, beta_start = beta_start, b_start = b_start,
@@ -216,11 +219,66 @@ graphclass <- function(X = NULL, Adj_list = NULL,
       gl_results$test_error = 1-sum(diag(table(sign(Yfit_test),sign(Ytest))))/length(Ytest)
     }
     gl_results$type = "intersection"
+    class(gl_results) <- "graphclass"
     return(gl_results)
   }else{
     stop("The value of type should be one between \"intersection\" and \"union\"")
   }
   }
   }
+}
+
+
+
+
+#' Predict function for graph classifier.
+#'
+#' @rdname graphclass
+#' @export
+#'
+#' @param object trained graphclass object
+#' @param newdata matrix of observations to predict. Each row corresponds to a new observation.
+#' @param type type of response. class: predicted classes. prob: predicted probabilities. error: misclassification error
+#' @param Ytest if type = "error", true classes to compare.
+#' @return A vector containing the predicted classes.
+#' @examples
+#' X = matrix(rnorm(100*34453), nrow = 100)
+#' Y = 2*(runif(100) > 0.5) - 1
+#' gc = graphclass(X, Y = factor(Y))
+#' Xtest = matrix(rnorm(100*34453), nrow = 100)
+#' predictions = predict(gc, Xtest)
+predict.graphclass <- function(object, newdata, type = "class", Ytest, ...) {
+  if (!inherits(object, "graphclass"))  {
+    stop("Object not of class 'graphclass'")
+  }
+  pred <- newdata %*% object$beta + object$b
+  Ypred <- sapply(c(pred), function(y) if(y>0) { object$Ypos_label}else{ object$Yneg_label})
+  if(type=="class")
+    return(Ypred)
+  if(type=="pred")
+    return(exp(pred) / (1 + exp(pred)))
+  if(type == "error")
+    return(sum(Ytest!=Ypred)/length(Ypred))
+}
+
+
+#' Plot function for graph classifier.
+#'
+#' Plots the adjacency matrix of the coefficients network
+#' 
+#' @rdname graphclass
+#' @export
+#'
+#' @param object trained graphclass object
+#' @examples
+#' X = matrix(rnorm(100*34453), nrow = 100)
+#' Y = 2*(runif(100) > 0.5) - 1
+#' gc = graphclass(X, Y = factor(Y))
+#' plot(gc)
+plot.graphclass <- function(object, ...) {
+  if (!inherits(object, "graphclass"))  {
+    stop("Object not of class 'graphclass'")
+  }
+  plot_adjmatrix(object$beta)
 }
 

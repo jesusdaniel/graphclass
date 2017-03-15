@@ -5,7 +5,6 @@ ADMM_grouplasso_weights <- function(y, D, omega1, omega2,
                                MAX_ITER = 200, TOL = 10^(-7),
                                rho = 1, features=NULL,
                                beta_start = NULL, NODES) {
-  #browser()
   require(Matrix)
   n = length(y) 
   m = nrow(D)
@@ -30,7 +29,7 @@ ADMM_grouplasso_weights <- function(y, D, omega1, omega2,
   best_beta = beta;  best_phi = phi_beta_k;  is_best_end = T
   #while((conv_crit>1e-04) | (resk > TOL | sk > TOL) & (iter <= MAX_ITER)) {
   while((resk > TOL | sk > TOL) & (iter <= MAX_ITER)) {
-    aux = y-u + rho*q + crossprod(D,rho*r-v)#<-----------    
+    aux = y-u + rho*q + Matrix::crossprod(D,rho*r-v)#<-----------
     beta = (aux)/(1+3*rho)
     #update q
     q = soft_thresholding.c(beta+u/rho,(1/rho)*omega1)
@@ -43,8 +42,7 @@ ADMM_grouplasso_weights <- function(y, D, omega1, omega2,
     # Update convergence criterias --------------------------------------
     phi_beta_k1 = as.numeric( 1/2 * norm_s(beta-y)^2 + 
                                 omega1*sum(abs(beta)) +omega2*gl_penalty.c(Dbeta, NODES))
-    
-    sk = rho * (max(abs(q-qk))+max(abs(crossprod(D,r-rk))))#<-----------
+    sk = rho * (max(abs(q-qk))+max(abs(Matrix::crossprod(D,r-rk))))#<-----------
     res1k = norm_s(beta-q);   res2k = norm_s(Dbeta-r)
     resk = res1k + res2k
     qk = q;   rk = r
