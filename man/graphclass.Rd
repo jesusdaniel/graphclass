@@ -2,17 +2,24 @@
 % Please edit documentation in R/graphclass.R
 \name{graphclass}
 \alias{graphclass}
+\alias{graphclass.default}
+\alias{predict.graphclass}
+\alias{plot.graphclass}
 \title{Train a graph classifier using regularized logistic regression.}
 \usage{
-graphclass(X = NULL, Adj_list = NULL, Y = NULL, Xtest = NULL,
-  Ytest = NULL, type = "intersection", lambda1 = NULL, lambda2 = NULL,
-  lambda = 0, rho = 0, gamma = 1e-05, params = NULL, id = "",
-  verbose = F, D = NULL)
+graphclass(X = NULL, Y = NULL, ...)
+
+\method{graphclass}{default}(X = NULL, Y = NULL, Xtest = NULL,
+  Ytest = NULL, Adj_list = NULL, type = "intersection", lambda = 0,
+  rho = 0, gamma = 1e-05, params = NULL, id = "", verbose = F,
+  D = NULL, Groups = NULL, G_penalty_factors = NULL, ...)
+
+\method{predict}{graphclass}(object, newdata, type = "class", Ytest, ...)
+
+\method{plot}{graphclass}(object, ...)
 }
 \arguments{
 \item{X}{A matrix with the training sample, in wich each row represents a vectorized (by column order) upper triangular part of a network.}
-
-\item{Adj_list}{A list of of symmetric matrices with 0 diagonal for training the classifier}
 
 \item{Y}{A vector containing the class labels of the training sample (for now only 2 classes are supported).}
 
@@ -20,7 +27,9 @@ graphclass(X = NULL, Adj_list = NULL, Y = NULL, Xtest = NULL,
 
 \item{Ytest}{Labels of test set.}
 
-\item{type}{should be either "intersection", "union" or "fusion", only "intersection" is currently supported.}
+\item{Adj_list}{A list of of symmetric matrices with 0 diagonal for training the classifier}
+
+\item{type}{should be either "intersection", "union", "fusion" or "groups". only "intersection" is currently supported.}
 
 \item{lambda}{penalty parameter \eqn{lambda}, by default is set to 0.}
 
@@ -33,16 +42,45 @@ graphclass(X = NULL, Adj_list = NULL, Y = NULL, Xtest = NULL,
 \item{verbose}{whether output is printed}
 
 \item{D}{matrix \eqn{D} of the penalty; precomputing it can save time.}
+
+\item{Groups}{list of lists, where each list correspond to a grouping and each sublist to sets of indexes in X. Each sublist should be a non-overlapping group.}
+
+\item{G_penalty_factors}{For type "groups", each group is penalized by this factor. Should sum to 1.}
+
+\item{object}{trained graphclass object}
+
+\item{newdata}{matrix of observations to predict. Each row corresponds to a new observation.}
+
+\item{type}{type of response. class: predicted classes. prob: predicted probabilities. error: misclassification error}
+
+\item{Ytest}{if type = "error", true classes to compare.}
+
+\item{object}{trained graphclass object}
 }
 \value{
 An object containing the trained graph classifier.
+
+A vector containing the predicted classes.
 }
 \description{
 Train a graph classifier using regularized logistic regression.
+
+Predict function for graph classifier.
+
+Plots the adjacency matrix of the coefficients network
 }
 \examples{
 X = matrix(rnorm(100*34453), nrow = 100)
 Y = 2*(runif(100) > 0.5) - 1
-gc = graphclass(X, Y = Y)
+gc = graphclass(X, Y = factor(Y))
 gc$train_error
+X = matrix(rnorm(100*34453), nrow = 100)
+Y = 2*(runif(100) > 0.5) - 1
+gc = graphclass(X, Y = factor(Y))
+Xtest = matrix(rnorm(100*34453), nrow = 100)
+predictions = predict(gc, Xtest)
+X = matrix(rnorm(100*34453), nrow = 100)
+Y = 2*(runif(100) > 0.5) - 1
+gc = graphclass(X, Y = factor(Y))
+plot(gc)
 }

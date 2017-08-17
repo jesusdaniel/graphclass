@@ -8,13 +8,15 @@
 #' @param Y A vector containing the class labels of the training sample (for now only 2 classes are supported).
 #' @param Xtest A optional test matrix.
 #' @param Ytest Labels of test set.
-#' @param type should be either "intersection", "union" or "fusion", only "intersection" is currently supported.
+#' @param type should be either "intersection", "union", "fusion" or "groups". only "intersection" is currently supported.
 #' @param lambda penalty parameter \eqn{lambda}, by default is set to 0.
 #' @param rho penalty parameter \eqn{rho} controlling sparsity, by default is set to 0.
 #' @param gamma ridge parameter (for numerical purposes).
 #' @param params A list containing threshold parameters for the algorithm (see details)
 #' @param verbose whether output is printed
 #' @param D matrix \eqn{D} of the penalty; precomputing it can save time.
+#' @param Groups list of lists, where each list correspond to a grouping and each sublist to sets of indexes in X. Each sublist should be a non-overlapping group.
+#' @param G_penalty_factors For type "groups", each group is penalized by this factor. Should sum to 1.
 #' @return An object containing the trained graph classifier.
 #' @examples
 #' X = matrix(rnorm(100*34453), nrow = 100)
@@ -36,7 +38,10 @@ graphclass.default <- function(X = NULL, Y = NULL,
                        type = "intersection",
                        lambda = 0, rho = 0,
                        gamma = 1e-5, 
-                       params = NULL, id = "", verbose = F, D = NULL,...) {
+                       params = NULL, id = "", verbose = F, D = NULL,
+                       Groups = NULL,
+                       G_penalty_factors = NULL,
+                       ...) {
   gl_results = list()
   gl_results$lambda <- lambda
   gl_results$rho <- rho
@@ -69,12 +74,24 @@ graphclass.default <- function(X = NULL, Y = NULL,
     }else{
       if(type=="fusion")
         D <- construct_D_fusion(NODES)
-      else{
+      else{if(type=="groups") {
+        D_list <- lapply(Groups, function(G) {
+          D <- Matrix(0, nrow = length(G), ncol = ncol(X))
+          for(i in 1:length(G)) {
+            D[i, G[[i]]] <- 1
+          }
+          D
+        })
+        if(is.null(G_penalty_factors)) {
+          G_penalty_factors <- rep(1/length(D_list), length(D_list))
+        }
+      }else{
         stop("The value of type should be one 
              between \"intersection\", \"union\" or \"fusion\".")
+          }
+        }
       }
     }
-  }
   # Check which method to use
   # Intersection penalty -----------------------------------------------
   if(type=="intersection") {
@@ -94,7 +111,59 @@ graphclass.default <- function(X = NULL, Y = NULL,
     }}
     gl = logistic_group_lasso_ridge(X, Y, D,
                                     lambda1 = lambda1, 
-                                    lambda2 = lambda2, 
+                                    lambda2 = lambda2,
+                                    gamma = gamma,
+                                    id, verbose, 
+                                    beta_start = beta_start, 
+                                    b_start = b_start,
+                                    NODES = NODES, 
+                                    MAX_ITER = MAX_ITER, 
+                                    CONV_CRIT = CONV_CRIT, 
+                                    MAX_TIME = MAX_TIME)
+    gl_results$beta = gl$best_beta/alpha_normalization
+    gl_results$b = gl$best_b
+    
+    # Train fitting
+    Yfit <- alpha_normalization*(X%*%gl_results$beta) + gl_results$b
+    gl_results$Yfit <- exp(Yfit)/(1+exp(Yfit))
+    gl_results$train_error <- 1- sum(diag(table(sign(Yfit),sign(Y))))/length(Y)
+    class(gl_results) <- "graphclass"
+    # Test fitting
+    if(!is.null(Xtest)) {
+      predict.graphclass(gl_results, Xtest)
+      Yfit_test <- Xtest%*%gl_results$beta + gl_results$b
+      Ypred <- 1*(Yfit_test>0) -1*(Yfit_test<=0)
+      gl_results$Ypred <- predict.graphclass(gl_results, Xtest)
+      gl_results$Yfit_test <- predict.graphclass(gl_results, Xtest, type = "prob")
+      if(!is.null(Ytest)) {
+        gl_results$test_error = predict.graphclass(gl_results, Xtest, type = "error", Ytest = Ytest)
+      } 
+    }
+    gl_results$type = "intersection"
+    gl_results$active_nodes = active_nodes(gl_results$beta, NODES = NODES)
+    gl_results$subgraph_active_edges_rate = active_edges_rate(gl_results$beta, NODES = NODES)
+    gl_results$nonzeros_percentage = sum(gl_results$beta!=0)/length(gl_results$beta)
+    return(gl_results)
+    
+  }else{if(type=="groups") {
+    # Check params
+    if(is.null(params)){
+      beta_start <- rep(0,NODES*(NODES-1)/2)
+      b_start <- 0
+      MAX_ITER <- 300;    CONV_CRIT <- 1e-05;   MAX_TIME = Inf
+    }else{if(is.null(params$beta_start)) {
+      beta_start <- rep(0,NODES*(NODES-1)/2)
+      b_start <- 0
+      MAX_ITER <- params$MAX_ITER;    CONV_CRIT <- params$CONV_CRIT;   MAX_TIME = params$MAX_TIME
+    }else{
+      beta_start <- params$beta_start*alpha_normalization
+      b_start <- params$b_start
+      MAX_ITER <- params$MAX_ITER;    CONV_CRIT <- params$CONV_CRIT;   MAX_TIME = params$MAX_TIME
+    }}
+    gl = logistic_group_lasso_ridge_groups(X, Y, D_list,
+                                    lambda1 = lambda1, 
+                                    lambda2 = lambda2,
+                                    G_penalty_factors = G_penalty_factors,
                                     gamma = gamma,
                                     id, verbose, 
                                     beta_start = beta_start, 
@@ -223,6 +292,7 @@ graphclass.default <- function(X = NULL, Y = NULL,
     return(gl_results)
   }else{
     stop("The value of type should be one between \"intersection\" and \"union\"")
+  }
   }
   }
   }

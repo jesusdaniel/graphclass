@@ -178,6 +178,14 @@ get_matrix <- function(beta, type="intersection") {
   return(Adj_matr)
 }
 
+#' Returns node sparsity of a vector
+#'
+#' @param beta Vectorized adjacency matrix. 
+#' @return Percentage of inactive nodes in the graph solution
+node_sparsity <- function(beta) {
+  A <- get_matrix(beta)
+  return(sum(apply(A,1,function(v) sum(v!=0))==0)/ncol(A))
+}
 
 #' Plot a vectorized adjacency matrix with cells divisions
 #'

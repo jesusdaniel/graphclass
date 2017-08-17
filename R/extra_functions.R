@@ -104,3 +104,12 @@ invert_D_full <- function(D,N = 264) {
   }
   return(list(multiply_by_inverse = multiply_by_inverse))
 }
+
+
+## 
+l2_groups_softhtresholding <- function(BetaVrho, D_list, lambda, G_penalty_factors) {
+  for(g in 1:length(D_list)) {
+    BetaVrho[,g] = pmax(1- lambda *  G_penalty_factors[g] /colSums(sqrt(colSums(t(D_list[[g]])*(BetaVrho[,g]^2)))*D_list[[g]]),0) * BetaVrho[,g]
+  }
+  BetaVrho
+}

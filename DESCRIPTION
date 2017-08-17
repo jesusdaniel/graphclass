@@ -3,7 +3,7 @@ Title: Network classification
 Version: 1.0
 Date: 2017-20-02
 Author: Jesus Arroyo
-Authors@R: person("JesÃºs Daniel", "Arroyo ReliÃ³n", email = "jarroyor@umich.edu", role = c("aut", "cre"))
+Authors@R: person("Jesús Daniel", "Arroyo Relión", email = "jarroyor@umich.edu", role = c("aut", "cre"))
 Maintainer: Jesus Arroyo <jarroyor@umich.edu>
 Description: Network classification with applications to brain connectomics.
 Depends: R (>= 3.2.2)
