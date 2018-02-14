@@ -75,19 +75,18 @@ graphclass.default <- function(X = NULL, Y = NULL,
       if(type=="fusion")
         D <- construct_D_fusion(NODES)
       else{if(type=="groups") {
+        require(Matrix)
         D_list <- lapply(Groups, function(G) {
-          D <- Matrix(0, nrow = length(G), ncol = ncol(X))
-          for(i in 1:length(G)) {
-            D[i, G[[i]]] <- 1
-          }
+          D <- Matrix(0, nrow = ncol(X), ncol = ncol(X))
+          Matrix::diag(D)[G] <- 1
           D
-        })
+          })
         if(is.null(G_penalty_factors)) {
           G_penalty_factors <- rep(1/length(D_list), length(D_list))
         }
       }else{
         stop("The value of type should be one 
-             between \"intersection\", \"union\" or \"fusion\".")
+             between \"intersection\", \"union\" or \"groups\".")
           }
         }
       }

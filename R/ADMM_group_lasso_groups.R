@@ -16,7 +16,8 @@ ADMM_grouplasso_weights_groups <- function(y, D_list, omega1, omega2, G_penalty_
   # Check if soft_thresholding(Y,w) == 0, best solution is zero
   soft_beta = soft_thresholding.c(y,omega1)
   q = soft_beta;  
-  R = tcrossprod(q, rep(1, G))
+  R = sapply(D_list, function(D) as.matrix(D%*%q))
+  Group_counts <- rowSums(sapply(D_list, function(D) as.matrix(D%*%rep(1, n))))
   if(max(abs(soft_beta))==0)
     return(list(beta = as.vector(soft_beta), q = q, r = R,
                 iter = 0, conv_crit = 0,best_beta = soft_beta))
@@ -32,14 +33,14 @@ ADMM_grouplasso_weights_groups <- function(y, D_list, omega1, omega2, G_penalty_
   #while((conv_crit>1e-04) | (resk > TOL | sk > TOL) & (iter <= MAX_ITER)) {
   while((resk > TOL | sk > TOL) & (iter <= MAX_ITER)) {
     aux = y-u + rho*q + rho*apply(R,1,sum) - apply(V,1, sum)
-    beta = aux/(1+(G+1)*rho)
+    beta = aux/(1+(Group_counts+1)*rho)
     #update q
     q = soft_thresholding.c(beta+u/rho,(1/rho)*omega1)
     # update r
-    BetaVrho <- tcrossprod(beta, rep(1, G)) + V/rho
+    BetaVrho <- sapply(D_list, function(D) as.matrix(D%*%beta))
     R = l2_groups_softhtresholding(BetaVrho, D_list, omega2/rho, G_penalty_factors)
     u = u + rho*(beta-q)#<-----------
-    V = V + rho*(tcrossprod(beta, rep(1, G))-R)#<-----------    
+    V = V + rho*(BetaVrho-R)#<-----------    
     # Update convergence criterias --------------------------------------
     beta2 = beta^2
     phi_beta_k1 = as.numeric( 1/2 * norm_s(beta-y)^2 + 

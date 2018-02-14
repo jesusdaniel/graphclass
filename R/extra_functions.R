@@ -55,7 +55,8 @@ Pmax2.C = function(x) {
 
 soft_thresholding.c = function(x, lambda) {
   n = length(x)
-  .C("soft_thresholding", x = as.double(x), lambda = as.double(lambda), n = as.integer(n))$x
+  pmax(abs(x)-lambda, 0)*sign(x)
+  #.C("soft_thresholding", x = as.double(x), lambda = as.double(lambda), n = as.integer(n))$x
 }
 
 soft_thresholdingl2 = function(x, lambda) {
@@ -108,8 +109,9 @@ invert_D_full <- function(D,N = 264) {
 
 ## 
 l2_groups_softhtresholding <- function(BetaVrho, D_list, lambda, G_penalty_factors) {
+  require(Matrix)
   for(g in 1:length(D_list)) {
-    BetaVrho[,g] = pmax(1- lambda *  G_penalty_factors[g] /colSums(sqrt(colSums(t(D_list[[g]])*(BetaVrho[,g]^2)))*D_list[[g]]),0) * BetaVrho[,g]
+    BetaVrho[,g] = max(1- lambda *  G_penalty_factors[g] /sqrt(sum(BetaVrho[,g]^2)),0) * BetaVrho[,g]
   }
   BetaVrho
 }
