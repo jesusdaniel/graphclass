@@ -55,8 +55,8 @@ Pmax2.C = function(x) {
 
 soft_thresholding.c = function(x, lambda) {
   n = length(x)
-  pmax(abs(x)-lambda, 0)*sign(x)
-  #.C("soft_thresholding", x = as.double(x), lambda = as.double(lambda), n = as.integer(n))$x
+  #pmax(abs(x)-lambda, 0)*sign(x)
+  .C("soft_thresholding", x = as.double(x), lambda = as.double(lambda), n = as.integer(n))$x
 }
 
 soft_thresholdingl2 = function(x, lambda) {
