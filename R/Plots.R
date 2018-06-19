@@ -1,91 +1,147 @@
-#' Plot a vectorized adjacency matrix.
+#' Plots a vectorized adjacency matrix.
 #'
-#' @param beta Vectorized adjacency matrix. For undirected networks use only upper triangle in column-major order, for directed use both
-#' @param type Either intersection for undirected networks, union for directed.
+#' Draws a plot of the adjacency matrix represented by a vector
+#' using the function \code{levelplot} of the \code{lattice} package.
+#' 
+#' @param edgevalues Edge values of the adjacency matrix. The argument can be either a square adjacency matrix, or a 
+#' vectorized adjacency matrix. For undirected networks, the vector should
+#' contain the upper triangular part in column-major order. For directed networks use both
+#' @param type If \code{edgevalues} is a vector, this parameter specifies whether the vector represents 
+#' an \code{undirected} or \code{directed} network. Default is \code{undirected}.
+#' @param edgetype Specify the type of edge values. For real-valued edges, \code{type = "real"}.
+#' If the edges are between 0 and 1, \code{tipe = "prob"}. For binary edges, \code{type = "binary"}.
+#' @param communities Optional argument to specify a list in which each element contains an array indicating
+#' the indexes of the nodes on each community.
+#' @param community_labels Labels for each community. The array should have the same length than \code{communities}.
+#' @param main Title of the plot
+#' @param axislabel Label for the axes.
+#' 
+#' @return An objected returned by the function \code{levelplot} of the \code{lattice} package.
+#' 
 #' @examples
-#' B = runif(34453)
-#' plot_adjmatrix(B)
-plot_adjmatrix <- function(beta, type="intersection") {
-  #browser()
+#' 
+#' # Plot the adjacency matrix of a COBRE data subject
+#' data(COBRE.data)
+#' X1 <- COBRE.data$X.cobre[1,]
+#' 
+#' # Plot adjacency matrix with nodes in default order
+#' plot_adjmatrix(X1)
+#' 
+#' # Plot adj. matrix divided by communities
+#' data(power.parcellation)
+#' communities = lapply(c(1:13, -1), function(x) which(power.parcellation$Master.Assignment==x))
+#' plot_adjmatrix(X1, communities = communities, community_labels = c(1:13, -1), axislabel = "Brain systems")
+#' 
+#' @encoding UTF-8
+#' @importFrom Rdpack reprompt
+plot_adjmatrix <- function(edgevalues, type=c("undirected", "directed"),
+                           edgetype = c("real", "prob", "binary"),
+                           communities = NULL, 
+                           community_labels = NULL, 
+                           main= "", axislabel = "Nodes") {
+  type <- match.arg(type)
   require(lattice)
-  if(type=="intersection") {
-    NODES <- (1+sqrt(1+8*length(beta)))/2
-    Adj_matr = array(0,dim = c(NODES, NODES))
-    Adj_matr[upper.tri(Adj_matr)] <- beta
-    Adj_matr <- Adj_matr + t(Adj_matr)  
-  }else{if(type=="union") {
-    NODES <- (1+sqrt(1+8*length(beta)/2))/2
-    #D <- construct_D(NODES)
-    #v = crossprod(D,beta)
-    Adj_matr = array(0,dim = c(NODES, NODES))
-    delta <- row(Adj_matr) - col(Adj_matr)
-    #Adj_matr[upper.tri(Adj_matr)] = as.vector(v)
-    Adj_matr[delta!=0] = beta
-    #Adj_matr = Adj_matr+t(Adj_matr)
+  if(is.null(dim(edgevalues))) {
+    edgetype <- match.arg(edgetype)
+    if(type=="undirected") {
+      NODES <- (1+sqrt(1+8*length(edgevalues)))/2
+    }else{if(type=="directed") {
+      NODES <- (1+sqrt(1+8*length(edgevalues)/2))/2
+    }else{
+      stop("The value of type should be \"undirected\" or \"directed\"")
+    }}
+    Adj_matr <- get_matrix(edgevalues, type) 
   }else{
-    stop("The value of type should be one between \"intersection\" and \"union\"")
-  }}
-  cuts = 100
-  df = (Adj_matr)
-  df <- df[,seq(from=ncol(df),to=1,by=-1)] #reversing the columns
-  print(levelplot(df, at = unique(c(seq(min(Adj_matr),max(-1e-10,min(Adj_matr)),length.out =cuts),0,seq(1e-10,max(Adj_matr),length.out =cuts))),
-            xlab = "Nodes", ylab = "Nodes",
-            col.regions = c(rgb((cuts:0)/cuts, green = 0, blue = 1,red = 0),rgb(red = 0,green = 0, blue = 0),
-                            rgb((0:cuts)/cuts, green = 0, blue = 0,red = 1)),
-            scales = list(tck = c(1,0), 
-                          x = list(at=seq(0,ncol(df),round(NODES/100)*10)),
-                          y = list(at = NODES-round(NODES/100)*10- seq(0,ncol(df),round(NODES/100)*10),
-                                     labels = (seq(round(NODES/100)*10,ncol(df),round(NODES/100)*10))))))
+    Adj_matr <- edgevalues
+    NODES <- ncol(Adj_matr)
+  }
+  
+  tckspace <- round(NODES/5, -floor(log10(NODES/5)))
+  
+  cuts <- 100
+  colorkey <- TRUE
+  #edgetype = real----------------------------------------
+  atneg <- 0
+  atpos <- 0
+  col.regions.neg <- rgb(red = 1,green = 1, blue = 1)
+  col.regions.pos <- rgb(red = 1,green = 1, blue = 1)
+  if(min(Adj_matr) <0 ) {
+    atneg <- seq(min(Adj_matr),max(-1e-16,min(Adj_matr)),length.out =cuts)
+    col.regions.neg <- rgb((cuts:0)/cuts, green = 0, blue = 1,red = 0)
+  }
+  if(max(Adj_matr) >0 ) {
+    atpos <- seq(1e-16,max(Adj_matr),length.out =cuts)
+    col.regions.pos <- rgb((0:cuts)/cuts, green = 0, blue = 0,red = 1)
+  }
+  atval = unique(c(atneg, 0, atpos))
+  col.vals = unique(c(col.regions.neg, rgb(red = 1,green = 1, blue = 1), col.regions.pos))
+  #edgetype = prob----------------------------------------
+  if(edgetype == "prob") {
+    atval = seq(0,1,length.out =cuts)
+    col.vals = rgb((0:cuts)/cuts, green = 0, blue = 1,red = 0)
+  }
+  #edgetype = binary -------------------------------------
+  if(edgetype == "binary") {
+    colorkey <- FALSE
+    Adj_matr <- 1*(Adj_matr != 0)
+    atval <- seq(0,1,length.out =cuts)
+    col.vals <- rgb((0:cuts)/cuts, green = 0, blue = 1,red = 0)
+  }
+  
+  # Plot community groupings --------------------------------
+  if(!is.null(communities)) {
+    lengths_coms = sapply(communities, length)
+    scales_list = list(tck = c(0,0),
+                       x=list(at=Reduce('+',c(0,lengths_coms[1:(length(lengths_coms)-1)]),accumulate = T ) + 
+                                lengths_coms/2, 
+                              labels=community_labels),
+                       y=list(at=Reduce('+',c(0,rev(lengths_coms)[1:(length(lengths_coms)-1)]),accumulate = T ) + 
+                                rev(lengths_coms)/2, 
+                              labels=rev(community_labels)))
+    panel_func = function(...){ panel.levelplot(...)
+      if(type=="prob_cells") {
+        select_list <- which(sel_cells,arr.ind = T)
+        for(cell in 1:nrow(select_list)) {
+          fill_block(select_list[cell,1],select_list[cell,2], communities)
+        }
+      }
+      
+      for(u in Reduce('+',lengths_coms,accumulate = T)) {
+        panel.abline(v = u+0.5)
+      }
+      for(u in Reduce('+',rev(lengths_coms),accumulate = T)) {
+        panel.abline(h = u+0.5)
+      }
+    }
+    nodeorder = unlist(communities)
+    Adj_matr <- Adj_matr[nodeorder, nodeorder]
+    Adj_matr <- Adj_matr[,seq(from=ncol(Adj_matr),to=1,by=-1)] #reversing the columns
+    levelplot(Adj_matr, at = atval,
+              xlab = axislabel, ylab = axislabel,
+              main = main,
+              colorkey = colorkey,
+              col.regions = col.vals,
+                       panel = panel_func,
+                       scales=scales_list)
+  }else{
+    Adj_matr <- Adj_matr[,seq(from=ncol(Adj_matr),to=1,by=-1)] #reversing the columns
+    levelplot(Adj_matr, at = atval,
+              xlab = axislabel, ylab = axislabel,
+              col.regions = col.vals,
+              main = main,
+              colorkey = colorkey,
+              scales = list(tck = c(1,0), 
+                            x = list(at=seq(0,ncol(Adj_matr), by = tckspace)),
+                            y = list(at = NODES-tckspace- seq(0,ncol(Adj_matr), by = tckspace),
+                                     labels = (seq(tckspace,ncol(Adj_matr),tckspace)))))
+  }
                             
 }
 
-plot_adj_community <- function(beta, communities, type="intersection") {
-  require(lattice)
-  if(type=="intersection") {
-    NODES <- (1+sqrt(1+8*length(beta)))/2
-    Adj_matr = array(0,dim = c(NODES, NODES))
-    Adj_matr[upper.tri(Adj_matr)] <- beta
-    Adj_matr <- Adj_matr + t(Adj_matr)  
-  }else{if(type=="union") {
-    NODES <- (1+sqrt(1+8*length(beta)/2))/2
-    D <- construct_D(NODES)
-    v = crossprod(D,beta)
-    Adj_matr = array(0,dim = c(NODES, NODES))
-    Adj_matr[upper.tri(Adj_matr)] = as.vector(v)
-    Adj_matr = Adj_matr+t(Adj_matr)
-  }else{
-    stop("The value of type should be one between \"intersection\" and \"union\"")
-  }}
-  
-  df = data.frame(Adj_matr)
-  df <- t(df)
-  df <- df[,seq(from=ncol(df),to=1,by=-1)] #reversing the columns
-  
-  cuts = 100
-  levelplot(Adj_matr[comms_order,comms_order], at = c(seq(min(Adj_matr),-1e-10,length.out =cuts),0,seq(1e-10,max(Adj_matr),length.out =cuts)),
-            xlab = "Nodes", ylab = "Nodes",
-            col.regions = c(rgb((cuts:0)/cuts, green = 0, blue = 1,red = 0),rgb(red = 0,green = 0, blue = 0),
-                            rgb((0:cuts)/cuts, green = 0, blue = 0,red = 1)))
-  comms_order = unlist(sapply(unique(communities), function(x) which(communities==x)))
-  length_comms = sapply(unique(communities), function(x) sum(communities==x))
-  cuts = 100
-  print(levelplot(Adj_matr[comms_order,comms_order], at = c(seq(min(Adj_matr),-1e-10,length.out =cuts),0,seq(1e-10,max(Adj_matr),length.out =cuts)),
-            xlab = "Brain regions", ylab = "Brain regions",
-            col.regions = c(rgb((cuts:0)/cuts, green = 0, blue = 1,red = 0),rgb(red = 0,green = 0, blue = 0),
-                            rgb((0:cuts)/cuts, green = 0, blue = 0,red = 1)),
-            panel = function(...){
-              panel.levelplot(...)
-              for(u in Reduce('+',length_comms,accumulate = T)) {
-                panel.abline(h = u+0.5)
-                panel.abline(v = u+0.5) 
-              }
-            },scales=list(x=list(at=Reduce('+',c(0,length_comms[1:13]),accumulate = T ) + length_comms[1:14]/2, 
-                                 labels=c(1:13,-1)),
-                          y=list(at=Reduce('+',c(0,length_comms[1:13]),accumulate = T ) + length_comms[1:14]/2, 
-                                 labels=c(1:13,-1)))))
-}
 
-plot_node_degree <- function(beta, type = "intersection") {
+
+
+plot_node_degree_distribution <- function(beta, type = "intersection") {
   if(type=="intersection") {
     NODES <- (1+sqrt(1+8*length(beta)))/2
     Adj_matr = array(0,dim = c(NODES, NODES))
@@ -156,108 +212,9 @@ plot_node_value_2 <- function(node_vals,
 }
 
 
-#' Returns a matrix from a vectorized network
-#'
-#' @param beta Vectorized adjacency matrix. 
-#' @param type Either intersection for undirected networks, union for directed.
-#' @return Adjacency matrix for a vectorized network
-get_matrix <- function(beta, type="intersection") {
-  if(type=="intersection") {
-    NODES <- (1+sqrt(1+8*length(beta)))/2
-    Adj_matr = array(0,dim = c(NODES, NODES))
-    Adj_matr[upper.tri(Adj_matr)] <- beta
-    Adj_matr <- Adj_matr + t(Adj_matr)  
-  }else{if(type=="union") {
-    NODES <- (1+sqrt(1+8*length(beta)/2))/2
-    Adj_matr = array(T,dim = c(NODES, NODES))
-    diag(Adj_matr) = F
-    Adj_matr[Adj_matr] = beta
-  }else{
-    stop("The value of type should be one between \"intersection\" and \"union\"")
-  }}
-  return(Adj_matr)
-}
 
-#' Returns node sparsity of a vector
-#'
-#' @param beta Vectorized adjacency matrix. 
-#' @return Percentage of inactive nodes in the graph solution
-node_sparsity <- function(beta) {
-  A <- get_matrix(beta)
-  return(sum(apply(A,1,function(v) sum(v!=0))==0)/ncol(A))
-}
 
-#' Plot a vectorized adjacency matrix with cells divisions
-#'
-#' @param edge_values Vectorized adjacency matrix. Only undirected networks are supported for now.
-#' @param communities Community of each node
-#' @param community_labels Name of each community that will appear on the plot.
-#' @param main Title of the plot
-#' @param type Either "real" for valued networks, "prob" for [0,1] valued networks or "prob_cells" for equal value on each cell
-plot_square_adj_mat <- function(edge_values, 
-                                communities = NULL, type = "real", 
-                                community_labels = c(1:13,-1), 
-                                main= "", cut_at, sel_cells) {
-  edge_values <- edge_values[,seq(from=ncol(edge_values),to=1,by=-1)] #reversing the columns
-  require(lattice)
-  cuts = 1000
-  if(type == "real") {
-    at_cuts = c(seq(min(edge_values,0)-1e-08,0,length.out =cuts),seq(1e-016,max(edge_values),length.out =cuts))
-    col_cuts = c(rgb((cuts:0)/cuts, green = 0, blue = 0,red = 1),rgb(red = 0,green = 0, blue = 0),
-             rgb((0:cuts)/cuts, green = 0, blue = 1,red = 0))
-  }else{
-    if(type == "pval") {
-      at_cuts = seq(0,1,length.out = cuts)
-      col_cuts = c(rgb((cuts:0)/cuts, green = 0, blue = 0,red = 1))
-    }else{
-      if(type == "prob"|type == "prob_cells") {
-        at_cuts = seq(0,1,length.out = cuts)
-        col_cuts = c(rgb(((0:cuts)/cuts)^3, green = 0, blue = 1,red = 0))
-      }else{
-        if(type == "prob2") {
-          at_cuts = seq(0,1,length.out = cuts)
-          col_cuts = c(rgb((seq(0,cuts*cut_at,length.out = cuts*cut_at)/cuts)^3, green = 0, blue = 1,red = 0), 
-                       rgb((seq(cuts*cut_at+1e-16,cuts,length.out = cuts*(1-cut_at))/cuts)^2, green = 0, blue = 0,red = 1))
-        }
-      }
-    }
-  }
-  if(!is.null(communities)) {
-    lengths_rois = sapply(communities, length)
-    scales_list = list(tck = c(0,0),
-                       x=list(at=Reduce('+',c(0,lengths_rois[1:(length(lengths_rois)-1)]),accumulate = T ) + lengths_rois/2, 
-                              labels=community_labels),
-                       y=list(at=Reduce('+',c(0,rev(lengths_rois)[1:(length(lengths_rois)-1)]),accumulate = T ) + rev(lengths_rois)/2, 
-                              labels=rev(community_labels)))
-    panel_func = function(...){ panel.levelplot(...)
-      if(type=="prob_cells") {
-        select_list <- which(sel_cells,arr.ind = T)
-        for(cell in 1:nrow(select_list)) {
-          fill_block(select_list[cell,1],select_list[cell,2], communities)
-        }
-      }
-        
-      for(u in Reduce('+',lengths_rois,accumulate = T)) {
-        panel.abline(v = u+0.5)
-      }
-      for(u in Reduce('+',rev(lengths_rois),accumulate = T)) {
-        panel.abline(h = u+0.5)
-      }
-    }
-    plot_sm =levelplot(edge_values, 
-                       xlab = "Brain systems", ylab = "Brain systems",
-                       at = at_cuts,
-                       col.regions = col_cuts,
-                       panel = panel_func,
-                       scales=scales_list, main = main)
-  }else{
-    plot_sm =levelplot(edge_values, main = main,
-                       xlab = "Brain systems", ylab = "Brain systems",
-                       at = at_cuts,
-                       col.regions = col_cuts)
-  }
-  print(plot_sm)
-}
+
 
 
 

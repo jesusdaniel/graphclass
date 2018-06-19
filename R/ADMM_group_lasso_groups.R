@@ -31,7 +31,9 @@ ADMM_grouplasso_weights_groups <- function(y, D_list, omega1, omega2, G_penalty_
   # MONITOR BEST BETA  ----------------------------------------------------------
   best_beta = beta;  best_phi = phi_beta_k;  is_best_end = T
   #while((conv_crit>1e-04) | (resk > TOL | sk > TOL) & (iter <= MAX_ITER)) {
+  print("hola")
   while((resk > TOL | sk > TOL) & (iter <= MAX_ITER)) {
+    print(iter)
     aux = y-u + rho*q + rho*apply(R,1,sum) - apply(V,1, sum)
     beta = aux/(1+(Group_counts+1)*rho)
     #update q

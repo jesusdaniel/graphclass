@@ -1,31 +1,76 @@
 # https://cran.r-project.org/web/packages/roxygen2/vignettes/rd.html
 # install.packages(repos=NULL, "graphclass_1.0.tar.gz")
-# R CMD Rd2pdf --pdf --title=graphclass -o graphclass.pdf man/*.Rd
-#' Train a graph classifier using regularized logistic regression.
+# R CMD Rd2pdf graphclass
+#' Regularized logistic regression classifier for networks.
+#' 
+#' \code{graphclass} fits a regularized logistic regression to a set of network adjacency matrices with responses, and returns an 
+#' object with the classifier.
+#' 
+#' The function  \code{graphclass} fits a regularized logistic regression to classify a set of network adjacency matrices
+#' with \eqn{N} labeled nodes and corresponding responses. The classifier fits a matrix of coefficients \eqn{B\in{R}^{N\times N}},
+#' in which \eqn{B_{ij}} indicates the coefficient corresponding to the edge \eqn{(i,j)}.
+#' 
+#'  The argument \code{type} provides options to choose the penalty function.
+#' If \code{type = "intersection"} or \code{"union"}, the penalty corresponds to the node selection penalty defined as
+#' \deqn{\Omega(B) = \lambda \left(\sum_{i=1}^N\sqrt{\sum_{j=1}^N B_{ij}^2} + \rho \sum_{i=1}^N\sum_{j=1}^N|B_{ij}|\right).}
+#' When \code{type = "intersection"}, a symmetric restriction on  \eqn{B} is enforced, and the penalty promotes subgraph selection.
+#' If \code{type = "intersection"}, the penalty promotes individual node selection.
+#' See \insertCite{relion2017network;textual}{graphclass} for more details.
+#' 
+#' The case  \code{type = "groups"} corresponds to a generic  group lasso penalty. The groups of edges have to be specified using the argument \code{Groups} with a list of arrays,
+#' in which each element of the list corresponds to a group, and the array indicates the indexes of the variables in that group.
+#' The optional argument \code{G_penalty_factors} is an array of  size equal to the number of groups, and can be used to 
+#' specify different weights for each group on the penalty (for example, when groups have different sizes).
+#' See example below.
+#' 
+#' The optional argument \code{params} is a list that allows to control some internal parameters of the optimization algorithm. 
+#' The elements \code{beta_start} and \code{b_start} are  initial values for the optimization algorithm. The value
+#' of \code{beta_start} is a vector that indicates the weights of the upper triangular part of \eqn{B}, and \code{b_start}
+#' is the initial value of the threshold in the logistic regression. By default, these parameters are set to zero. The elements
+#' \code{MAX_ITER} and \code{CONV_CRIT} can be used to change the maximum number of iterations and the convergence criterion in the proximal algorithm
+#' for fitting the node selection penalty (see \insertCite{relion2017network;textual}{graphclass}). By default, these values are set to
+#' \code{MAX_ITER=300} and \code{CONV_CRIT = 1e-5}.
+#' 
+#' @references
+#' \insertRef{relion2017network}{graphclass}
 #'
-#' @param X A matrix with the training sample, in wich each row represents a vectorized (by column order) upper triangular part of a network.
-#' @param Adj_list A list of of symmetric matrices with 0 diagonal for training the classifier
-#' @param Y A vector containing the class labels of the training sample (for now only 2 classes are supported).
-#' @param Xtest A optional test matrix.
-#' @param Ytest Labels of test set.
-#' @param type should be either "intersection", "union", "fusion" or "groups". only "intersection" is currently supported.
+#' 
+#' 
+#' @param X A matrix with the training samples, in wich each row represents the vectorized (by column order) upper triangular part of a network adjacency matrix.
+#' @param Adj_list A training list of of symmetric adjacency matrices with zeros in the diagonal
+#' @param Y A vector containing the class labels of the training samples (only 2 classes are supported for now).
+#' @param Xtest Optional argument for providing a matrix containing the test samples, with each row representing an upper-triangular vectorized adjacency matrix.
+#' @param Ytest Optional argument containing the labels of test samples.
+#' @param type  Type of penalty function. Default is \code{"intersection".}
+#' See details.
 #' @param lambda penalty parameter \eqn{lambda}, by default is set to 0.
 #' @param rho penalty parameter \eqn{rho} controlling sparsity, by default is set to 0.
-#' @param gamma ridge parameter (for numerical purposes).
-#' @param params A list containing threshold parameters for the algorithm (see details)
+#' @param gamma ridge parameter (for numerical purposes). Default is \code{gamma = 1e-5}.
+#' @param params A list containing internal parameters for the optimization algorithm. See details.
 #' @param verbose whether output is printed
-#' @param D matrix \eqn{D} of the penalty; precomputing it can save time.
+#' @param D matrix \eqn{D} used by the penalty to define the groups. This optional argument can be used to pass a precomputed matrix \code{D}, which can be time saving if the method is fitted multiple times. See the function \code{construct_D}.
 #' @param Groups list of lists, where each list correspond to a grouping and each sublist to sets of indexes in X. Each sublist should be a non-overlapping group.
 #' @param G_penalty_factors For type "groups", each group is penalized by this factor. Should sum to 1.
 #' @return An object containing the trained graph classifier.
 #' @examples
-#' X = matrix(rnorm(100*34453), nrow = 100)
-#' Y = 2*(runif(100) > 0.5) - 1
-#' gc = graphclass(X, Y = factor(Y))
+#' 
+#' # Load COBRE data
+#' data(COBRE.data)
+#' X <- COBRE.data$X.cobre
+#' Y <- COBRE.data$X.cobre
+#' 
+#' # An example with subgraph selection penalty
+#' gc = graphclass(X, Y = factor(Y), lambda = 1e-5, rho = 1)
 #' gc$train_error
+#' 
+#' # Groups
+#' 
+#' @encoding UTF-8
+#' @importFrom Rdpack reprompt
 # Params: 
 # - beta_start, b_start, MAX_ITER, CONV_CRIT, MAX_TIME
-graphclass <- function(X = NULL, Y = NULL,...) {
+graphclass <- function(X = NULL, Y = NULL, 
+                       type = c("intersection", "union", "groups", "fusion"),...) {
   UseMethod("graphclass")
 }
 
@@ -35,7 +80,7 @@ graphclass <- function(X = NULL, Y = NULL,...) {
 graphclass.default <- function(X = NULL, Y = NULL,
                        Xtest = NULL, Ytest = NULL,
                        Adj_list = NULL, 
-                       type = "intersection",
+                       type = c("intersection", "union", "groups", "fusion"),
                        lambda = 0, rho = 0,
                        gamma = 1e-5, 
                        params = NULL, id = "", verbose = F, D = NULL,
@@ -46,6 +91,7 @@ graphclass.default <- function(X = NULL, Y = NULL,
   gl_results$lambda <- lambda
   gl_results$rho <- rho
   gl_results$gamma <- gamma
+  type <- match.arg(type)
   # Dependent data
   if(!is.null(X)) {
     # ncols = N*(N-1)/2
@@ -94,20 +140,21 @@ graphclass.default <- function(X = NULL, Y = NULL,
   # Check which method to use
   # Intersection penalty -----------------------------------------------
   if(type=="intersection") {
+    beta_start <- rep(0,NODES*(NODES-1)/2)
+    b_start <- 0
+    MAX_ITER <- 300;    CONV_CRIT <- 1e-05;   MAX_TIME = Inf
     # Check params
-    if(is.null(params)){
-      beta_start <- rep(0,NODES*(NODES-1)/2)
-      b_start <- 0
-      MAX_ITER <- 300;    CONV_CRIT <- 1e-05;   MAX_TIME = Inf
-    }else{if(is.null(params$beta_start)) {
-      beta_start <- rep(0,NODES*(NODES-1)/2)
-      b_start <- 0
-      MAX_ITER <- params$MAX_ITER;    CONV_CRIT <- params$CONV_CRIT;   MAX_TIME = params$MAX_TIME
-    }else{
-      beta_start <- params$beta_start*alpha_normalization
-      b_start <- params$b_start
-      MAX_ITER <- params$MAX_ITER;    CONV_CRIT <- params$CONV_CRIT;   MAX_TIME = params$MAX_TIME
-    }}
+    if(!is.null(params)){
+      if(!is.null(params$beta_start))
+        beta_start <- params$beta_start*alpha_normalization
+      if(!is.null(params$b_start))
+        b_start <- params$b_start
+      if(!is.null(params$MAX_ITER))
+        MAX_ITER <- params$MAX_ITER
+      if(!is.null(params$CONV_CRIT))
+        CONV_CRIT <- params$CONV_CRIT
+        
+    }
     gl = logistic_group_lasso_ridge(X, Y, D,
                                     lambda1 = lambda1, 
                                     lambda2 = lambda2,
@@ -146,19 +193,22 @@ graphclass.default <- function(X = NULL, Y = NULL,
     
   }else{if(type=="groups") {
     # Check params
-    if(is.null(params)){
-      beta_start <- rep(0,NODES*(NODES-1)/2)
-      b_start <- 0
-      MAX_ITER <- 300;    CONV_CRIT <- 1e-05;   MAX_TIME = Inf
-    }else{if(is.null(params$beta_start)) {
-      beta_start <- rep(0,NODES*(NODES-1)/2)
-      b_start <- 0
-      MAX_ITER <- params$MAX_ITER;    CONV_CRIT <- params$CONV_CRIT;   MAX_TIME = params$MAX_TIME
-    }else{
-      beta_start <- params$beta_start*alpha_normalization
-      b_start <- params$b_start
-      MAX_ITER <- params$MAX_ITER;    CONV_CRIT <- params$CONV_CRIT;   MAX_TIME = params$MAX_TIME
-    }}
+    beta_start <- rep(0,NODES*(NODES-1)/2)
+    b_start <- 0
+    MAX_ITER <- 300;    CONV_CRIT <- 1e-05;   MAX_TIME = Inf
+    # Check params
+    if(!is.null(params)){
+      if(!is.null(params$beta_start))
+        beta_start <- params$beta_start*alpha_normalization
+      if(!is.null(params$b_start))
+        b_start <- params$b_start
+      if(!is.null(params$MAX_ITER))
+        MAX_ITER <- params$MAX_ITER
+      if(!is.null(params$CONV_CRIT))
+        CONV_CRIT <- params$CONV_CRIT
+    }
+    print(CONV_CRIT)
+    print(MAX_ITER)
     gl = logistic_group_lasso_ridge_groups(X, Y, D_list,
                                     lambda1 = lambda1, 
                                     lambda2 = lambda2,
@@ -199,19 +249,21 @@ graphclass.default <- function(X = NULL, Y = NULL,
   }else{if(type == "union"){
     # Union penalty ---------------------------------------------------
     # Check params
-    if(is.null(params)){
-      beta_start <- rep(0,NODES*(NODES-1))
-      b_start <- 0
-      MAX_ITER <- 300;    CONV_CRIT <- 1e-05;   MAX_TIME = Inf
-    }else{if(is.null(params$beta_start)) {
-      beta_start <- rep(0,NODES*(NODES-1))
-      b_start <- 0
-      MAX_ITER <- params$MAX_ITER;    CONV_CRIT <- params$CONV_CRIT;   MAX_TIME = params$MAX_TIME
-    }else{
-      beta_start <- params$beta_start*alpha_normalization
-      b_start <- params$b_start
-      MAX_ITER <- params$MAX_ITER;    CONV_CRIT <- params$CONV_CRIT;   MAX_TIME = params$MAX_TIME
-    }}
+    beta_start <- rep(0,NODES*(NODES-1))
+    b_start <- 0
+    MAX_ITER <- 300;    CONV_CRIT <- 1e-05;   MAX_TIME = Inf
+    # Check params
+    if(!is.null(params)){
+      if(!is.null(params$beta_start))
+        beta_start <- params$beta_start*alpha_normalization
+      if(!is.null(params$b_start))
+        b_start <- params$b_start
+      if(!is.null(params$MAX_ITER))
+        MAX_ITER <- params$MAX_ITER
+      if(!is.null(params$CONV_CRIT))
+        CONV_CRIT <- params$CONV_CRIT
+      
+    }
     gl = logistic_union_group_lasso_ridge(X, Y, D,
                                           lambda1 = lambda1, 
                                           lambda2 = lambda2, 
@@ -300,54 +352,8 @@ graphclass.default <- function(X = NULL, Y = NULL,
 
 
 
-#' Predict function for graph classifier.
-#'
-#' @rdname graphclass
-#' @export
-#'
-#' @param object trained graphclass object
-#' @param newdata matrix of observations to predict. Each row corresponds to a new observation.
-#' @param type type of response. class: predicted classes. prob: predicted probabilities. error: misclassification error
-#' @param Ytest if type = "error", true classes to compare.
-#' @return A vector containing the predicted classes.
-#' @examples
-#' X = matrix(rnorm(100*34453), nrow = 100)
-#' Y = 2*(runif(100) > 0.5) - 1
-#' gc = graphclass(X, Y = factor(Y))
-#' Xtest = matrix(rnorm(100*34453), nrow = 100)
-#' predictions = predict(gc, Xtest)
-predict.graphclass <- function(object, newdata, type = "class", Ytest, ...) {
-  if (!inherits(object, "graphclass"))  {
-    stop("Object not of class 'graphclass'")
-  }
-  pred <- newdata %*% object$beta + object$b
-  Ypred <- sapply(c(pred), function(y) if(y>0) { object$Ypos_label}else{ object$Yneg_label})
-  if(type=="class")
-    return(Ypred)
-  if(type=="pred")
-    return(exp(pred) / (1 + exp(pred)))
-  if(type == "error")
-    return(sum(Ytest!=Ypred)/length(Ypred))
-}
-
-
-#' Plot function for graph classifier.
-#'
-#' Plots the adjacency matrix of the coefficients network
-#' 
-#' @rdname graphclass
-#' @export
-#'
-#' @param object trained graphclass object
-#' @examples
-#' X = matrix(rnorm(100*34453), nrow = 100)
-#' Y = 2*(runif(100) > 0.5) - 1
-#' gc = graphclass(X, Y = factor(Y))
-#' plot(gc)
-plot.graphclass <- function(object, ...) {
-  if (!inherits(object, "graphclass"))  {
-    stop("Object not of class 'graphclass'")
-  }
-  plot_adjmatrix(object$beta)
+.onLoad <- function(lib, pkg){
+  Rdpack::Rdpack_bibstyles(package = pkg, authors = "LongNames")
+  invisible(NULL)
 }
 
