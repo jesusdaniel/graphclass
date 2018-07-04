@@ -26,7 +26,7 @@ logistic_group_lasso_ridge_groups <- function(X,Y, D_list, lambda1, lambda2,
   penalty = function(beta,b) {
     beta2 <- beta^2
     lambda1*sum(abs(beta)) + lambda2*crossprod(G_penalty_factors, sapply(D_list, function(D) {
-      sum(sqrt(D%*% beta2))
+      sqrt(sum(beta2[D]))
     }))
   }
   

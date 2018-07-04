@@ -41,8 +41,9 @@ plot_adjmatrix <- function(edgevalues, type=c("undirected", "directed"),
                            main= "", axislabel = "Nodes") {
   type <- match.arg(type)
   require(lattice)
+  require(Matrix)
+  edgetype <- match.arg(edgetype)
   if(is.null(dim(edgevalues))) {
-    edgetype <- match.arg(edgetype)
     if(type=="undirected") {
       NODES <- (1+sqrt(1+8*length(edgevalues)))/2
     }else{if(type=="directed") {
@@ -50,9 +51,9 @@ plot_adjmatrix <- function(edgevalues, type=c("undirected", "directed"),
     }else{
       stop("The value of type should be \"undirected\" or \"directed\"")
     }}
-    Adj_matr <- get_matrix(edgevalues, type) 
+    Adj_matr <- as.matrix(get_matrix(edgevalues, type))
   }else{
-    Adj_matr <- edgevalues
+    Adj_matr <- as.matrix(edgevalues)
     NODES <- ncol(Adj_matr)
   }
   
@@ -65,12 +66,14 @@ plot_adjmatrix <- function(edgevalues, type=c("undirected", "directed"),
   atpos <- 0
   col.regions.neg <- rgb(red = 1,green = 1, blue = 1)
   col.regions.pos <- rgb(red = 1,green = 1, blue = 1)
-  if(min(Adj_matr) <0 ) {
-    atneg <- seq(min(Adj_matr),max(-1e-16,min(Adj_matr)),length.out =cuts)
+  min_Adj <- min(Adj_matr[!is.na(Adj_matr)])
+  max_Adj <- max(Adj_matr[!is.na(Adj_matr)])
+  if(min_Adj <0 ) {
+    atneg <- seq(min_Adj,max(-1e-16,min(Adj_matr)),length.out =cuts)
     col.regions.neg <- rgb((cuts:0)/cuts, green = 0, blue = 1,red = 0)
   }
-  if(max(Adj_matr) >0 ) {
-    atpos <- seq(1e-16,max(Adj_matr),length.out =cuts)
+  if(max_Adj > 0) {
+    atpos <- seq(1e-16,max_Adj,length.out =cuts)
     col.regions.pos <- rgb((0:cuts)/cuts, green = 0, blue = 0,red = 1)
   }
   atval = unique(c(atneg, 0, atpos))

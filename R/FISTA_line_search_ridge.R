@@ -21,6 +21,7 @@ fista_line_search_ridge <- function(proximal_f,b_step,f,grad_f,penalty, x_start,
   beta_path  = list()
   beta_path[[1]] = xk1
   is_best_end = FALSE
+  #browser()
   while(k<=5 | ((crit_f > TOLERANCE  & criterion > TOLERANCE) & (k < MAX_STEPS) &
                 proc.time()[1]-time_start < MAX_TIME)){
     crit_f = newf

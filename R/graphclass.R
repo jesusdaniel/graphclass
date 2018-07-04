@@ -209,7 +209,7 @@ graphclass.default <- function(X = NULL, Y = NULL,
     }
     print(CONV_CRIT)
     print(MAX_ITER)
-    gl = logistic_group_lasso_ridge_groups(X, Y, D_list,
+    gl = logistic_group_lasso_ridge_groups(X, Y, Groups,
                                     lambda1 = lambda1, 
                                     lambda2 = lambda2,
                                     G_penalty_factors = G_penalty_factors,
