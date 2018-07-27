@@ -137,8 +137,8 @@ pmax.fast <- function(scalar, vector)
 
 soft_thresholding.c = function(x, lambda) {
    n = length(x)
-   pmax.fast(0, abs(x)-lambda) * sign(x)
-   #.C("soft_thresholding", x = as.double(x), lambda = as.double(lambda), n = as.integer(n))$x
+   #pmax.fast(0, abs(x)-lambda) * sign(x)
+   .C("soft_thresholding", x = as.double(x), lambda = as.double(lambda), n = as.integer(n))$x
 }
 
 soft_thresholdingl2 = function(x, lambda) {

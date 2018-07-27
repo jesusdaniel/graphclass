@@ -57,7 +57,7 @@
 #' # Load COBRE data
 #' data(COBRE.data)
 #' X <- COBRE.data$X.cobre
-#' Y <- COBRE.data$X.cobre
+#' Y <- COBRE.data$Y.cobre
 #' 
 #' # An example with subgraph selection penalty
 #' gc = graphclass(X, Y = factor(Y), lambda = 1e-5, rho = 1)
