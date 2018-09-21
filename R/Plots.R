@@ -29,8 +29,11 @@
 #' 
 #' # Plot adj. matrix divided by communities
 #' data(power.parcellation)
-#' communities = lapply(c(1:13, -1), function(x) which(power.parcellation$Master.Assignment==x))
-#' plot_adjmatrix(X1, communities = communities, community_labels = c(1:13, -1), axislabel = "Brain systems")
+#' # Node assignments (note that node 75 is missing on COBRE)
+#' node.assignments <- power.parcellation$Master.Assignment[-75]
+#' communities = lapply(c(1:13, -1), function(x) which(node.assignments==x))
+#' plot_adjmatrix(X1, communities = communities, 
+#'       community_labels = c(1:13, -1), axislabel = "Brain systems")
 #' 
 #' @encoding UTF-8
 #' @importFrom Rdpack reprompt

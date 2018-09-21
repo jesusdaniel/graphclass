@@ -1,15 +1,20 @@
 #' Plot function for graph classifier.
 #'
-#' Plots the adjacency matrix of the coefficients network
+#' Plots the coefficients matrix obtained with 
+#' the function \code{\link{graphclass}}.
 #' 
 # @rdname graphclass
 #' @export
 #'
 #' @param object trained graphclass object
 #' @examples
-#' X = matrix(rnorm(100*34453), nrow = 100)
-#' Y = 2*(runif(100) > 0.5) - 1
-#' gc = graphclass(X, Y = factor(Y))
+#' data(COBRE.data)
+#' X <- COBRE.data$X.cobre
+#' Y <- COBRE.data$Y.cobre
+#' 
+#' # An example of the subgraph selection penalty
+#' gc = graphclass(X, Y = factor(Y), lambda = 1e-5, rho = 1)
+#' 
 #' plot(gc)
 plot.graphclass <- function(object, ...) {
   if (!inherits(object, "graphclass"))  {

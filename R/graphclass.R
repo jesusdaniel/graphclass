@@ -14,14 +14,13 @@
 #' If \code{type = "intersection"} or \code{"union"}, the penalty corresponds to the node selection penalty defined as
 #' \deqn{\Omega(B) = \lambda \left(\sum_{i=1}^N\sqrt{\sum_{j=1}^N B_{ij}^2} + \rho \sum_{i=1}^N\sum_{j=1}^N|B_{ij}|\right).}
 #' When \code{type = "intersection"}, a symmetric restriction on  \eqn{B} is enforced, and the penalty promotes subgraph selection.
-#' If \code{type = "intersection"}, the penalty promotes individual node selection.
+#' If \code{type = "union"}, the penalty promotes individual node selection.
 #' See \insertCite{relion2017network;textual}{graphclass} for more details.
 #' 
-#' The case  \code{type = "groups"} corresponds to a generic  group lasso penalty. The groups of edges have to be specified using the argument \code{Groups} with a list of arrays,
+#' The value \code{type = "groups"} corresponds to a generic  group lasso penalty. The groups of edges have to be specified using the argument \code{Groups} with a list of arrays,
 #' in which each element of the list corresponds to a group, and the array indicates the indexes of the variables in that group.
 #' The optional argument \code{G_penalty_factors} is an array of  size equal to the number of groups, and can be used to 
 #' specify different weights for each group on the penalty (for example, when groups have different sizes).
-#' See example below.
 #' 
 #' The optional argument \code{params} is a list that allows to control some internal parameters of the optimization algorithm. 
 #' The elements \code{beta_start} and \code{b_start} are  initial values for the optimization algorithm. The value
@@ -34,7 +33,7 @@
 #' @references
 #' \insertRef{relion2017network}{graphclass}
 #'
-#' 
+#'  @seealso \code{\link{plot.graphclass}}, \code{\link{predict.graphclass}}
 #' 
 #' @param X A matrix with the training samples, in wich each row represents the vectorized (by column order) upper triangular part of a network adjacency matrix.
 #' @param Adj_list A training list of of symmetric adjacency matrices with zeros in the diagonal
@@ -51,7 +50,15 @@
 #' @param D matrix \eqn{D} used by the penalty to define the groups. This optional argument can be used to pass a precomputed matrix \code{D}, which can be time saving if the method is fitted multiple times. See the function \code{construct_D}.
 #' @param Groups list of lists, where each list correspond to a grouping and each sublist to sets of indexes in X. Each sublist should be a non-overlapping group.
 #' @param G_penalty_factors For type "groups", each group is penalized by this factor. Should sum to 1.
+#' 
 #' @return An object containing the trained graph classifier.
+#' \item{beta}{Edge coefficients vector of the regularized logistic regression solution.}
+#' \item{b}{Intercept value.}
+#' \item{Yfit}{Fitted logistic regression probabilities in the train data.}
+#' \item{Ypred}{Predicted class for the test samples (if available).}
+#' \item{train_error}{Percentage of train samples that are misclassified.}
+#' \item{test_error}{Percentage of test samples that are misclassified (if available).}
+#' 
 #' @examples
 #' 
 #' # Load COBRE data
@@ -59,11 +66,26 @@
 #' X <- COBRE.data$X.cobre
 #' Y <- COBRE.data$Y.cobre
 #' 
-#' # An example with subgraph selection penalty
-#' gc = graphclass(X, Y = factor(Y), lambda = 1e-5, rho = 1)
-#' gc$train_error
+#' # An example of the subgraph selection penalty
+#' gc = graphclass(X = X, Y = factor(Y), type = "intersection",
+#'                lambda = 1e-4, rho = 1, gamma = 1e-5)
+#' plot(gc)
 #' 
-#' # Groups
+#' 
+#' # 5-fold cross validation
+#' fold_index <- (1:length(Y) %% 5) + 1
+#' 
+#' gclist <- list()
+#' for(fold in 1:5) {
+#'     foldout <- which(fold_index == fold) 
+#'     gclist[[fold]] <- graphclass(X = X[-foldout,], Y = factor(Y[-foldout]),
+#'                      Xtest = X[foldout,], Ytest = factor(Y[foldout]),
+#'                      type = "intersection",
+#'                      lambda = 1e-4, rho = 1, gamma = 1e-5,
+#'                      D = D263)
+#' }
+#' # test error on each fold
+#' lapply(gclist, function(gc) gc$test_error)
 #' 
 #' @encoding UTF-8
 #' @importFrom Rdpack reprompt

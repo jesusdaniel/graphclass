@@ -1,20 +1,29 @@
-#' Predict function for graph classifier.
+#' Prediction function for graph classifier
+#' 
+#' Given an object of type \code{graphclass}, this function obtains the fitted classes for a new data.
 #'
-# @rdname graphclass
-#' @export
-#'
-#' @param object trained graphclass object
-#' @param newdata matrix of observations to predict. Each row corresponds to a new observation.
-#' @param type type of response. class: predicted classes. prob: predicted probabilities. error: misclassification error
-#' @param Ytest if type = "error", true classes to compare.
+#' @param gc A trained graph classifier object
+#' @param X A matrix containing rows with vectorized upper triangular adjacency matrices (column-major order)
+#' @param type Indicates the type of response: \code{class} for class predictions, \code{prob} for predicted probabilities, 
+#' \code{error} for misclassification error (if \code{Ytest} is provided).
+#' @param Ytest If type = "error", true classes to compare.
 #' @return A vector containing the predicted classes.
 #' @examples
-#' X = matrix(rnorm(100*34453), nrow = 100)
-#' Y = 2*(runif(100) > 0.5) - 1
-#' gc = graphclass(X, Y = factor(Y))
-#' Xtest = matrix(rnorm(100*34453), nrow = 100)
-#' predictions = predict(gc, Xtest)
-predict.graphclass <- function(object, newdata, type = "class", Ytest, ...) {
+#' data(COBRE.data)
+#' X <- COBRE.data$X.cobre
+#' Y <- COBRE.data$Y.cobre
+#' 
+#' #Split into train and test
+#' test <- runif(length(Y)) <= 0.1
+#' gc <- graphclass(X = X[!test, ], Y = factor(Y[!test]), type = "intersection",
+#'                lambda = 1e-4, rho = 1, gamma = 1e-5)
+#'                
+#' gc.test <- predict(gc, X[test, ]) 
+#' predict(gc, X[test, ], "error", Ytest = Y[test])
+predict.graphclass <- function(object, newdata, 
+                               type = c("class", "prob", "error"), 
+                               Ytest, ...) {
+  type <- match.arg(type)
   if (!inherits(object, "graphclass"))  {
     stop("Object not of class 'graphclass'")
   }

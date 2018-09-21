@@ -1,14 +1,20 @@
-#' Returns a matrix from a vectorized network
+#' Converts a vector into an adjacency matrix
+#' 
+#' Given a vector that encodes an adjacency matrix, returns the matrix representation.
 #'
-#' @param beta Vectorized adjacency matrix. 
-#' @param  type Parameter to specify whether the vector represents an \code{undirected}
+#' @param beta Vectorized adjacency matrix. If the network is undirected,
+#' the vector is assumed to represent the upper triangular part of the adjacency 
+#' matrix in column major order. For undirected network, the vector contains the
+#' entries ordered by column and excluding the diagonal elements.
+#' @param  type Specifies whether the vector represents an \code{undirected}
 #' or \code{directed} network. Default is \code{undirected}.
 #' 
-#' @return Adjacency matrix for a vectorized network
+#' @return Adjacency matrix. 
 #' 
 #' # Obtain the adjacency matrix of a COBRE data subject
 #' data(COBRE.data)
-#' A <- get_matrix(COBRE.data$X.cobre[1,])
+#' A <- get_matrix(COBRE.data$X.cobre[1,], type = "undirected")
+#' plot_adjmatrix(A)
 #' 
 #' @encoding UTF-8
 #' @importFrom Rdpack reprompt
@@ -30,13 +36,18 @@ get_matrix <- function(beta, type=c("undirected", "directed")) {
   return(Adj_matr)
 }
 
-#' Returns a vectorized adjacency matrix
+#' Convert matrix to vector.
+#' 
+#' The function encodes an adjacency matrix into a vector.
 #'
 #' @param A Adjacency matrix of a network.
 #' @param  type Parameter to specify whether the adjacency matrix represents an \code{undirected}
 #' or \code{directed} network. Default is \code{undirected}.
 #' 
-#' @return Vector represeingt an adjacency matrix
+#' @return A vector containing the upper triangular part of an
+#'  adjacency matrix (if the graph is undirected) or adjacency entry
+#'  values ordered by column and excluding the diagonal entries (if the graph
+#'  is directed).
 #' 
 #' @encoding UTF-8
 #' @importFrom Rdpack reprompt
@@ -53,22 +64,68 @@ matrix_to_vec <- function(A, type=c("undirected", "directed")) {
   }}
   return(beta)
 }
-#' Calculates the node sparsity of a vectorized adjacency matrix
-#'
+#' Percentage of inactive nodes in a network
+#' 
+#' Calculates the node sparsity of a vectorized adjacency matrix, defined
+#' as the average number of nodes with no edges.
+#' 
 #' @param beta Vectorized adjacency matrix. 
-#' @return Percentage of inactive nodes in the graph solution
-node_sparsity <- function(beta) {
-  A <- get_matrix(beta)
+#' @param  type Specifies whether the vector represents an \code{undirected}
+#' or \code{directed} network. Default is \code{undirected}.
+#' 
+#' @return Percentage of inactive nodes in the graph
+#' 
+#'  @examples
+#' A <- matrix(0, ncol = 4, nrow = 4)
+#' A[2, 1] <- 1
+#' A[1, 2] <- 1
+#' A[2, 3] <- 1
+#' A[3, 2] <- 1
+#' vec <- matrix_to_vec(A)
+#' node_sparsity(vec)
+node_sparsity <- function(beta, type=c("undirected", "directed")) {
+  type <- match.arg(type)
+  A <- get_matrix(beta, type = type)
   return(sum(apply(A,1,function(v) sum(v!=0))==0)/ncol(A))
 }
 
 
-#' Constructor for D penalty matrix, use it for efficiency when running the classifier multiple times.
+#' Constructor for penalty matrix
+#' 
+#' This function constructs an auxiliary matrix to compute the node penalty in the regularized
+#' classifier, which is internally used by the optimization algorithm. This matrix can be passed
+#' to the function \code{\link{graphclass}} in order to avoid creating it every time this
+#' function is called.
+#'  Use it for efficiency when running the classifier multiple times (for example, 
+#'  in a cross-validation routine).
 #'
 #' @param nodes Number of nodes in the network, by default is 264 (Power parcellation).
-#' @return A sparse D matrix
+#' @return A sparse matrix
 #' @examples
-#' D = construct_D(100)
+#' D263 = construct_D(263)
+#' 
+#' # Load COBRE data
+#' data(COBRE.data)
+#' X <- COBRE.data$X.cobre
+#' Y <- COBRE.data$Y.cobre
+#' 
+#' # 5-fold cross validation of the subgraph selection penalty
+#' fold_index <- (1:length(Y) %% 5) + 1
+#' 
+#' gclist <- list()
+#' for(fold in 1:5) {
+#'     foldout <- which(fold_index == fold) 
+#'     gclist[[fold]] <- graphclass(X = X[-foldout,], Y = factor(Y[-foldout]),
+#'                      Xtest = X[foldout,], Ytest = factor(Y[foldout]),
+#'                      type = "intersection",
+#'                      lambda = 1e-4, rho = 1, gamma = 1e-5,
+#'                      D = D263)
+#' }
+#' # test error on each fold
+#' lapply(gclist, function(gc) gc$test_error)
+#' 
+#' 
+#' 
 construct_D <- function(nodes = 264) {
   require(Matrix)
   B <- array(0,dim = c(nodes,nodes))
