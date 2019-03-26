@@ -31,7 +31,7 @@ predict.graphclass <- function(object, newdata,
   Ypred <- sapply(c(pred), function(y) if(y>0) { object$Ypos_label}else{ object$Yneg_label})
   if(type=="class")
     return(Ypred)
-  if(type=="pred")
+  if(type=="prob")
     return(exp(pred) / (1 + exp(pred)))
   if(type == "error")
     return(sum(Ytest!=Ypred)/length(Ypred))
