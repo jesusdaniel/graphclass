@@ -2,16 +2,30 @@
 % Please edit documentation in R/extra_functions.R
 \name{node_sparsity}
 \alias{node_sparsity}
-\title{Calculates the node sparsity of a vectorized adjacency matrix}
+\title{Percentage of inactive nodes in a network}
 \usage{
-node_sparsity(beta)
+node_sparsity(beta, type = c("undirected", "directed"))
 }
 \arguments{
 \item{beta}{Vectorized adjacency matrix.}
+
+\item{type}{Specifies whether the vector represents an \code{undirected}
+or \code{directed} network. Default is \code{undirected}.}
 }
 \value{
-Percentage of inactive nodes in the graph solution
+Percentage of inactive nodes in the graph
 }
 \description{
-Calculates the node sparsity of a vectorized adjacency matrix
+Calculates the node sparsity of a vectorized adjacency matrix, defined
+as the average number of nodes with no edges.
+}
+\examples{
+
+A <- matrix(0, ncol = 4, nrow = 4)
+A[2, 1] <- 1
+A[1, 2] <- 1
+A[2, 3] <- 1
+A[3, 2] <- 1
+vec <- matrix_to_vec(A)
+node_sparsity(vec)
 }

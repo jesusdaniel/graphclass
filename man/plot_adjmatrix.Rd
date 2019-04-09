@@ -7,7 +7,8 @@
 \usage{
 plot_adjmatrix(edgevalues, type = c("undirected", "directed"),
   edgetype = c("real", "prob", "binary"), communities = NULL,
-  community_labels = NULL, main = "", axislabel = "Nodes")
+  community_labels = NULL, main = "", axislabel = "Nodes",
+  colorlims = NULL)
 }
 \arguments{
 \item{edgevalues}{Edge values of the adjacency matrix. The argument can be either a square adjacency matrix, or a 
@@ -28,6 +29,8 @@ the indexes of the nodes on each community.}
 \item{main}{Title of the plot}
 
 \item{axislabel}{Label for the axes.}
+
+\item{colorlims}{An array with two elements indicating the minimum and maximum value in the color bar}
 }
 \value{
 An objected returned by the function \code{levelplot} of the \code{lattice} package.
@@ -47,7 +50,10 @@ plot_adjmatrix(X1)
 
 # Plot adj. matrix divided by communities
 data(power.parcellation)
-communities = lapply(c(1:13, -1), function(x) which(power.parcellation$Master.Assignment==x))
-plot_adjmatrix(X1, communities = communities, community_labels = c(1:13, -1), axislabel = "Brain systems")
+# Node assignments (note that node 75 is missing on COBRE)
+node.assignments <- power.parcellation$Master.Assignment[-75]
+communities = lapply(c(1:13, -1), function(x) which(node.assignments==x))
+plot_adjmatrix(X1, communities = communities, 
+      community_labels = c(1:13, -1), axislabel = "Brain systems")
 
 }

@@ -3,7 +3,7 @@
 \encoding{UTF-8}
 \name{matrix_to_vec}
 \alias{matrix_to_vec}
-\title{Returns a vectorized adjacency matrix}
+\title{Convert matrix to vector.}
 \usage{
 matrix_to_vec(A, type = c("undirected", "directed"))
 }
@@ -14,8 +14,11 @@ matrix_to_vec(A, type = c("undirected", "directed"))
 or \code{directed} network. Default is \code{undirected}.}
 }
 \value{
-Vector represeingt an adjacency matrix
+A vector containing the upper triangular part of an
+ adjacency matrix (if the graph is undirected) or adjacency entry
+ values ordered by column and excluding the diagonal entries (if the graph
+ is directed).
 }
 \description{
-Returns a vectorized adjacency matrix
+The function encodes an adjacency matrix into a vector.
 }

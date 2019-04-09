@@ -4,17 +4,23 @@
 \name{graphclass-package}
 \alias{graphclass}
 \alias{graphclass-package}
-\title{Generate R documentation from inline comments.}
+\title{Graph classification with node penalized logistic regression}
 \description{
-Roxygen2 allows you to write documentation in comment blocks co-located
-with code.
+Network classification with applications to brain connectomics.
 }
 \details{
-The only function you're likely to need from \pkg{roxygen2} is
-\code{\link{roxygenize}}. Otherwise refer to the vignettes to see
-how to format the documentation.
+This package performs classification with network valued covariates
+using a penalized logistic regression as in \insertCite{relion2017network;textual}{graphclass}.
+
+The function \code{\link{graphclass}} fits a regularized logistic regression
+to a set of graphs with associated class labels. 
+The package also provides a function \code{\link{plot_adjmatrix}} to plot the adjacency matrix
+of a graph or square matrix.
+Two datasets of fMRI brain networks are available in the package. See \code{\link{COBRE.data}} and 
+\code{\link{UMich.data}}.
 }
 \author{
 \strong{Maintainer}: Jesus Daniel Arroyo Relion \email{jarroyor@umich.edu}
 
 }
+\keyword{internal}

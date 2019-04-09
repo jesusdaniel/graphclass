@@ -10,7 +10,10 @@
   \item{Color}{Color representing the system.}
   \item{Suggested.System}{Suggested brain system.}
   
-}}
+}
+
+#' @examples 
+data(power.parcellation)}
 \source{
 \url{http://www.nil.wustl.edu/labs/petersen/Resources_files/Consensus264.xls}
 }

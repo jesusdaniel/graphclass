@@ -6,12 +6,12 @@
 \title{fMRI brain networks of the COBRE dataset}
 \format{\code{COBRE.data} is a list with two elements
 \describe{
-  \item{X.cobre}{A matrix containing the upper triangular part of networks. Each row represents a subject,
-  and the columns represent edges. The edge weights are calculated based on the correlation networks of the
-  fMRI time series, after which a rank transformation among all weights in the network and a normalization
-  between subjects is computed. The networks are composed of 263 nodes and 34453 different edges.
+  \item{X.cobre}{A matrix containing the upper triangular part of the networks. Each row represents a subject,
+  and the columns represent edges. The edge weights represent the Fisher-transformed correlation 
+  between the
+  fMRI time series of the nodes. The networks are composed of 263 nodes and 34453 different edges.
   For a description of the preprocessing steps to obtain the network edge weights, see \insertCite{relion2017network;textual}{graphclass}.
-  }
+  }.
   \item{Y.cobre}{Class labels of the subjects in the dataset. \code{Y=1} represents schizophrenia status.}
 }}
 \source{
@@ -21,7 +21,12 @@
 COBRE.data
 }
 \description{
-The COBRE dataset contains the fMRI brain networks of 124  subjects
-and class labels of schizophrenia brain disease status.
+This dataset contains fMRI brain networks of 124  subjects
+and corresponding class labels indicating schizophrenia status (70 healthy controls and 54
+schizophrenic subjects).
+}
+\examples{
+data(COBRE.data)
+
 }
 \keyword{datasets}

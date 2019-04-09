@@ -7,18 +7,21 @@
 \format{\code{UMich.data} is a list with two elements
 \describe{
   \item{X.cobre}{A matrix containing the upper triangular part of networks. Each row represents a subject,
-  and the columns represent edges. The edge weights are calculated based on the correlation networks of the
-  fMRI time series, after which a rank transformation among all weights in the network and a normalization
-  between subjects is computed. Each network has 264 labeled nodes and 34716 different edges.
+  and the columns represent edges. The edge weights represent the Fisher-transformed correlation 
+  between the
+  fMRI time series of the nodes. Each network has 264 labeled nodes and 34716 different edges.
   For a description of the preprocessing steps to obtain the network edge weights, see \insertCite{relion2017network;textual}{graphclass}.
-  }
+  }.
   \item{Y.cobre}{Class labels of the subjects in the dataset.  \code{Y = 1} represents schizophrenia status.}
-}}
+}
+
+#' @examples 
+data(COBRE.data)}
 \usage{
 UMich.data
 }
 \description{
 The UMich dataset contains the fMRI brain networks of 78  subjects
-and class labels of schizophrenia brain disease status.
+and class labels of schizophrenia disease status.
 }
 \keyword{datasets}

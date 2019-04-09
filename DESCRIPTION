@@ -1,6 +1,6 @@
 Package: graphclass
 Title: Network classification
-Version: 1.0
+Version: 1.1
 Date: 2017-20-02
 Author: Jesus Arroyo Relion, Daniel Kessler, Elizaveta Levina and Stephan F. Taylor
 Authors@R: person("Jesus Daniel", "Arroyo Relion", email = "jarroyor@umich.edu", role = c("aut", "cre"))
@@ -8,8 +8,8 @@ Maintainer: Jesus Arroyo Relion <jarroyor@umich.edu>
 Description: Network classification with applications to brain connectomics.
 Depends: R (>= 3.2.2)
 Imports: Rdpack, Matrix, lattice
-License:  GPL-2
+License: GPL-2
 Encoding: UTF-8
 LazyData: true
 RdMacros: Rdpack
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.0
