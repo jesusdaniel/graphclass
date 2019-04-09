@@ -1,7 +1,10 @@
 #' Converts a vector into an adjacency matrix
 #' 
 #' Given a vector that encodes an adjacency matrix, returns the matrix representation.
-#'
+#' 
+#' @rdname graphclass
+#' @export
+#' 
 #' @param beta Vectorized adjacency matrix. If the network is undirected,
 #' the vector is assumed to represent the upper triangular part of the adjacency 
 #' matrix in column major order. For undirected network, the vector contains the
@@ -50,6 +53,9 @@ get_matrix <- function(beta, type=c("undirected", "directed")) {
 #'  values ordered by column and excluding the diagonal entries (if the graph
 #'  is directed).
 #' 
+#' @rdname graphclass
+#' @export
+#' 
 #' @encoding UTF-8
 #' @importFrom Rdpack reprompt
 matrix_to_vec <- function(A, type=c("undirected", "directed")) {
@@ -76,16 +82,10 @@ matrix_to_vec <- function(A, type=c("undirected", "directed")) {
 #' 
 #' @return Percentage of inactive nodes in the graph
 #' 
-<<<<<<< HEAD
-<<<<<<< HEAD
 #' @examples
 #' 
-=======
 #'  @examples
->>>>>>> FETCH_HEAD
-=======
 #'  @examples
->>>>>>> FETCH_HEAD
 #' A <- matrix(0, ncol = 4, nrow = 4)
 #' A[2, 1] <- 1
 #' A[1, 2] <- 1
@@ -93,6 +93,11 @@ matrix_to_vec <- function(A, type=c("undirected", "directed")) {
 #' A[3, 2] <- 1
 #' vec <- matrix_to_vec(A)
 #' node_sparsity(vec)
+#' @rdname graphclass
+#' @export
+#' 
+#' @encoding UTF-8
+#' @importFrom Rdpack reprompt
 node_sparsity <- function(beta, type=c("undirected", "directed")) {
   type <- match.arg(type)
   A <- get_matrix(beta, type = type)
@@ -134,8 +139,11 @@ node_sparsity <- function(beta, type=c("undirected", "directed")) {
 #' # test error on each fold
 #' lapply(gclist, function(gc) gc$test_error)
 #' 
+#' @rdname graphclass
+#' @export
 #' 
-#' 
+#' @encoding UTF-8
+#' @importFrom Rdpack reprompt
 construct_D <- function(nodes = 264) {
   require(Matrix)
   B <- array(0,dim = c(nodes,nodes))
