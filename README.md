@@ -1,8 +1,8 @@
-<<<<<<< HEAD
 # graphclass
 
 Code and data for penalized graph classifier method from "Network classification with applications to brain connectomics" https://arxiv.org/abs/1701.08140
-=======
+
+
 # graphclass
 
 Code and data for penalized graph classifier method from "Network classification with applications to brain connectomics" https://arxiv.org/abs/1701.08140
@@ -22,7 +22,3 @@ install_github("jesusdaniel/graphclass")
 # Data
 
 The COBRE data was obtained from http://fcon_1000.projects.nitrc.org/indi/retro/cobre.html (see also [**graphclass.pdf**](https://github.com/jesusdaniel/graphclass/blob/master/graphclass.pdf) for details and references).
-<<<<<<< HEAD
->>>>>>> FETCH_HEAD
-=======
->>>>>>> FETCH_HEAD
