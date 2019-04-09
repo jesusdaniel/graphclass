@@ -11,6 +11,7 @@
 #' 
 #' @return Adjacency matrix. 
 #' 
+#' @examples 
 #' # Obtain the adjacency matrix of a COBRE data subject
 #' data(COBRE.data)
 #' A <- get_matrix(COBRE.data$X.cobre[1,], type = "undirected")
@@ -75,7 +76,16 @@ matrix_to_vec <- function(A, type=c("undirected", "directed")) {
 #' 
 #' @return Percentage of inactive nodes in the graph
 #' 
+<<<<<<< HEAD
+<<<<<<< HEAD
+#' @examples
+#' 
+=======
 #'  @examples
+>>>>>>> FETCH_HEAD
+=======
+#'  @examples
+>>>>>>> FETCH_HEAD
 #' A <- matrix(0, ncol = 4, nrow = 4)
 #' A[2, 1] <- 1
 #' A[1, 2] <- 1
