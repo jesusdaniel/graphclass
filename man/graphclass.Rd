@@ -301,6 +301,7 @@ predict(gc, X[test, ], "error", Ytest = Y[test])
 }
 \references{
 \insertRef{relion2017network}{graphclass}
-
- @seealso \code{\link{plot.graphclass}}, \code{\link{predict.graphclass}}
+}
+\seealso{
+\code{\link{plot.graphclass}}, \code{\link{predict.graphclass}}
 }

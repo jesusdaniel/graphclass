@@ -19,6 +19,9 @@
 #' data(COBRE.data)
 #' 
 #' @source \url{http://fcon_1000.projects.nitrc.org/indi/retro/cobre.html}
+#' @references 
+#' \insertRef{Aine2017}{graphclass}
+#' 
 "COBRE.data"
 
 
@@ -42,7 +45,7 @@
 #' }
 #' 
 #' #' @examples 
-#' data(COBRE.data)
+#' data(UMich.data)
 #' 
 "UMich.data"
 
@@ -64,5 +67,8 @@
 #' data(power.parcellation)
 #' 
 #' @source \url{http://www.nil.wustl.edu/labs/petersen/Resources_files/Consensus264.xls}
+#' @references 
+#' \insertRef{power2011functional}{graphclass}
+#' 
 "power.parcellation"
 

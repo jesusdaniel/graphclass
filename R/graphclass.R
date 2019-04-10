@@ -36,7 +36,7 @@
 #' @references
 #' \insertRef{relion2017network}{graphclass}
 #'
-#'  @seealso \code{\link{plot.graphclass}}, \code{\link{predict.graphclass}}
+#' @seealso \code{\link{plot.graphclass}}, \code{\link{predict.graphclass}}
 #' 
 #' @param X A matrix with the training samples, in wich each row represents the vectorized (by column order) upper triangular part of a network adjacency matrix.
 #' @param Adj_list A training list of of symmetric adjacency matrices with zeros in the diagonal

@@ -16,7 +16,7 @@
 }
 
 #' @examples 
-data(COBRE.data)}
+data(UMich.data)}
 \usage{
 UMich.data
 }

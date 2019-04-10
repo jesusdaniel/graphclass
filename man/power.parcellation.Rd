@@ -24,4 +24,7 @@ power.parcellation
 Table containing the node assignments to brain systems of the 264 regions of interest from \insertCite{power2011functional;textual}{graphclass}. 
 These nodes were used to construct COBRE.data and UMich.data. Note that node 75 is missing in the COBRE data.
 }
+\references{
+\insertRef{power2011functional}{graphclass}
+}
 \keyword{datasets}

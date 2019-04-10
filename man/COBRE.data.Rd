@@ -29,4 +29,7 @@ schizophrenic subjects).
 data(COBRE.data)
 
 }
+\references{
+\insertRef{Aine2017}{graphclass}
+}
 \keyword{datasets}
