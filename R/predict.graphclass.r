@@ -1,7 +1,6 @@
 #' Prediction function for graph classifier
 #' 
 #' Given an object of type \code{graphclass}, this function obtains the fitted classes for a new data.
-#' @rdname graphclass
 #' @export
 #' 
 #' @param gc A trained graph classifier object

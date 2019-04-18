@@ -13,15 +13,17 @@
   For a description of the preprocessing steps to obtain the network edge weights, see \insertCite{relion2017network;textual}{graphclass}.
   }.
   \item{Y.cobre}{Class labels of the subjects in the dataset.  \code{Y = 1} represents schizophrenia status.}
-}
-
-#' @examples 
-data(UMich.data)}
+}}
 \usage{
-UMich.data
+data(UMich.data)
 }
 \description{
 The UMich dataset contains the fMRI brain networks of 78  subjects
 and class labels of schizophrenia disease status.
+}
+\examples{
+data(UMich.data)
+plot_adjmatrix(UMich.data$X.umich[1,])
+
 }
 \keyword{datasets}

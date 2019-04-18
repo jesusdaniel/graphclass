@@ -92,6 +92,7 @@
 #' 
 #' @encoding UTF-8
 #' @importFrom Rdpack reprompt
+#' @useDynLib Pmax2
 graphclass <- function(X = NULL, Y = NULL, 
                        type = c("intersection", "union", "groups", "fusion"),...) {
   UseMethod("graphclass")

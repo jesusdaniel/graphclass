@@ -10,10 +10,7 @@
   \item{Color}{Color representing the system.}
   \item{Suggested.System}{Suggested brain system.}
   
-}
-
-#' @examples 
-data(power.parcellation)}
+}}
 \source{
 \url{http://www.nil.wustl.edu/labs/petersen/Resources_files/Consensus264.xls}
 }
@@ -23,6 +20,10 @@ power.parcellation
 \description{
 Table containing the node assignments to brain systems of the 264 regions of interest from \insertCite{power2011functional;textual}{graphclass}. 
 These nodes were used to construct COBRE.data and UMich.data. Note that node 75 is missing in the COBRE data.
+}
+\examples{
+data(power.parcellation)
+
 }
 \references{
 \insertRef{power2011functional}{graphclass}

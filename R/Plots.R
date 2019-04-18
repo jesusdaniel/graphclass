@@ -3,7 +3,6 @@
 #' Draws a plot of the adjacency matrix represented by a vector
 #' using the function \code{levelplot} of the \code{lattice} package.
 #' 
-#' @rdname graphclass
 #' @export
 #' 
 #' @param edgevalues Edge values of the adjacency matrix. The argument can be either a square adjacency matrix, or a 

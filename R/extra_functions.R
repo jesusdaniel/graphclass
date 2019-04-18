@@ -2,7 +2,6 @@
 #' 
 #' Given a vector that encodes an adjacency matrix, returns the matrix representation.
 #' 
-#' @rdname graphclass
 #' @export
 #' 
 #' @param beta Vectorized adjacency matrix. If the network is undirected,
@@ -14,7 +13,8 @@
 #' 
 #' @return Adjacency matrix. 
 #' 
-#' @examples 
+#' @examples
+#' 
 #' # Obtain the adjacency matrix of a COBRE data subject
 #' data(COBRE.data)
 #' A <- get_matrix(COBRE.data$X.cobre[1,], type = "undirected")
@@ -53,7 +53,6 @@ get_matrix <- function(beta, type=c("undirected", "directed")) {
 #'  values ordered by column and excluding the diagonal entries (if the graph
 #'  is directed).
 #' 
-#' @rdname graphclass
 #' @export
 #' 
 #' @encoding UTF-8
@@ -71,6 +70,7 @@ matrix_to_vec <- function(A, type=c("undirected", "directed")) {
   }}
   return(beta)
 }
+
 #' Percentage of inactive nodes in a network
 #' 
 #' Calculates the node sparsity of a vectorized adjacency matrix, defined
@@ -83,9 +83,6 @@ matrix_to_vec <- function(A, type=c("undirected", "directed")) {
 #' @return Percentage of inactive nodes in the graph
 #' 
 #' @examples
-#' 
-#'  @examples
-#'  @examples
 #' A <- matrix(0, ncol = 4, nrow = 4)
 #' A[2, 1] <- 1
 #' A[1, 2] <- 1
@@ -93,7 +90,7 @@ matrix_to_vec <- function(A, type=c("undirected", "directed")) {
 #' A[3, 2] <- 1
 #' vec <- matrix_to_vec(A)
 #' node_sparsity(vec)
-#' @rdname graphclass
+#' 
 #' @export
 #' 
 #' @encoding UTF-8
@@ -116,6 +113,7 @@ node_sparsity <- function(beta, type=c("undirected", "directed")) {
 #'
 #' @param nodes Number of nodes in the network, by default is 264 (Power parcellation).
 #' @return A sparse matrix
+#' 
 #' @examples
 #' D263 = construct_D(263)
 #' 
@@ -139,7 +137,6 @@ node_sparsity <- function(beta, type=c("undirected", "directed")) {
 #' # test error on each fold
 #' lapply(gclist, function(gc) gc$test_error)
 #' 
-#' @rdname graphclass
 #' @export
 #' 
 #' @encoding UTF-8
@@ -213,7 +210,8 @@ pmax.fast <- function(scalar, vector)
 soft_thresholding.c = function(x, lambda) {
    n = length(x)
    #pmax.fast(0, abs(x)-lambda) * sign(x)
-   .C("soft_thresholding", x = as.double(x), lambda = as.double(lambda), n = as.integer(n))$x
+   .C("soft_thresholding", #PACKAGE = "graphclass",
+      x = as.double(x), lambda = as.double(lambda), n = as.integer(n))$x
 }
 
 soft_thresholdingl2 = function(x, lambda) {
@@ -226,12 +224,13 @@ soft_thresholdingl2 = function(x, lambda) {
 
 l2_Db_soft_thresholding.c = function(Db,lambda, NODES) {  
   n = NODES
-  .C("l2_node_soft_ghtesholding", 
+  .C("l2_node_soft_ghtesholding", #PACKAGE = "graphclass",
      Db = as.double(Db), N=as.integer(n), lambda = as.double(lambda))$Db
 }
 gl_penalty.c = function(b, NODES) {
   gl = 0;
-  .C("group_lasso_node_penalty",Db=as.double(b),N = as.integer(NODES), gl = as.double(gl))$gl
+  .C("group_lasso_node_penalty", #PACKAGE = "graphclass",
+     Db=as.double(b),N = as.integer(NODES), gl = as.double(gl))$gl
 }
 # l2_soft_thresholding.c = function(x, lambda) {
 #   n = length(x)
@@ -239,7 +238,8 @@ gl_penalty.c = function(b, NODES) {
 # }
 
 l1l2_proximal.c = function(beta, lambda1, lambda2, NODES) {
-  .C("l1l2_node_soft_thresholding", b = as.double(beta), N=as.integer(NODES), 
+  .C("l1l2_node_soft_thresholding", #PACKAGE = "graphclass",
+     b = as.double(beta), N=as.integer(NODES), 
      lambda1 = as.double(lambda1), lambda2 = as.double(lambda2))$b
 }
 

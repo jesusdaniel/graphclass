@@ -9,7 +9,7 @@
   \item{X.cobre}{A matrix containing the upper triangular part of the networks. Each row represents a subject,
   and the columns represent edges. The edge weights represent the Fisher-transformed correlation 
   between the
-  fMRI time series of the nodes. The networks are composed of 263 nodes and 34453 different edges.
+  fMRI time series of the nodes after passing to ranks. The networks are composed of 263 nodes and 34453 different edges.
   For a description of the preprocessing steps to obtain the network edge weights, see \insertCite{relion2017network;textual}{graphclass}.
   }.
   \item{Y.cobre}{Class labels of the subjects in the dataset. \code{Y=1} represents schizophrenia status.}
@@ -18,7 +18,7 @@
 \url{http://fcon_1000.projects.nitrc.org/indi/retro/cobre.html}
 }
 \usage{
-COBRE.data
+data(COBRE.data)
 }
 \description{
 This dataset contains fMRI brain networks of 124  subjects
@@ -27,6 +27,7 @@ schizophrenic subjects).
 }
 \examples{
 data(COBRE.data)
+plot_adjmatrix(COBRE.data$X.cobre[1,])
 
 }
 \references{
