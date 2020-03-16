@@ -7,9 +7,11 @@ Authors@R: person("Jesus Daniel", "Arroyo Relion", email = "jarroyor@umich.edu",
 Maintainer: Jesus Arroyo Relion <jarroyor@umich.edu>
 Description: Network classification with applications to brain connectomics.
 Depends: R (>= 3.2.2)
-Imports: Rdpack, Matrix, lattice
+Imports: Rdpack, Matrix, lattice,
+    Rcpp
 License: GPL-2
 Encoding: UTF-8
 LazyData: false
 RdMacros: Rdpack
-RoxygenNote: 6.1.0
+RoxygenNote: 7.0.2
+LinkingTo: Rcpp
