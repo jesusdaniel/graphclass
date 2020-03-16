@@ -22,3 +22,5 @@ The COBRE data was obtained from http://fcon_1000.projects.nitrc.org/indi/retro/
 
 Aine, C. J., et al. "Multimodal neuroimaging in schizophrenia: description and dissemination." Neuroinformatics 15.4 (2017): 343-364.
 
+Arroyo Relión, J.D., Kessler, D., Levina, E., Taylor, S.F., "Network classification with applications to brain connectomics". Ann. Appl. Stat. 13 (2019), no. 3, 1648--1677
+
