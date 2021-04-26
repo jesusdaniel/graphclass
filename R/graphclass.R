@@ -78,6 +78,9 @@
 #' # 5-fold cross validation
 #' fold_index <- (1:length(Y) %% 5) + 1
 #' 
+#' # Make penalty matrix in advance to save time
+#' D263 <- construct_D(nodes = 263)
+#' 
 #' gclist <- list()
 #' for(fold in 1:5) {
 #'     foldout <- which(fold_index == fold) 

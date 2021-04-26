@@ -4,8 +4,7 @@
 \alias{predict.graphclass}
 \title{Prediction function for graph classifier}
 \usage{
-\method{predict}{graphclass}(object, newdata, type = c("class", "prob",
-  "error"), Ytest, ...)
+\method{predict}{graphclass}(object, newdata, type = c("class", "prob", "error"), Ytest, ...)
 }
 \arguments{
 \item{type}{Indicates the type of response: \code{class} for class predictions, \code{prob} for predicted probabilities, 

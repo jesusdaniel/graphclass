@@ -4,16 +4,21 @@
 \name{COBRE.data}
 \alias{COBRE.data}
 \title{fMRI brain networks of the COBRE dataset}
-\format{\code{COBRE.data} is a list with two elements
+\format{
+\code{COBRE.data} is a list with three elements
 \describe{
-  \item{X.cobre}{A matrix containing the upper triangular part of the networks. Each row represents a subject,
-  and the columns represent edges. The edge weights represent the Fisher-transformed correlation 
-  between the
-  fMRI time series of the nodes after passing to ranks. The networks are composed of 263 nodes and 34453 different edges.
-  For a description of the preprocessing steps to obtain the network edge weights, see \insertCite{relion2017network;textual}{graphclass}.
+  \item{X.cobre}{A matrix containing the upper triangular part of the networks in column major order and without the
+  diagonal entries. The networks are composed of 263 nodes obtained from the Power parcellation \insertCite{power2011functional}{graphclass}
+  and 34453 different edges. Each row corresponds to a subject in the data,
+  and the columns correspond to edges in the networks. The edge weights are the Fisher-transformed correlation 
+  between the fMRI time series of the nodes. Nuisance covariates like age, gender, motion (meanFD and meanFDquad) and handedness
+  have been regressed out. For a description of the preprocessing steps to obtain the network edge weights, 
+  see \insertCite{relion2017network;textual}{graphclass}.
   }.
   \item{Y.cobre}{Class labels of the subjects in the dataset. \code{Y=1} represents schizophrenia status.}
-}}
+  \item{subject.label}{Subject ID number in the COBRE dataset.}
+}
+}
 \source{
 \url{http://fcon_1000.projects.nitrc.org/indi/retro/cobre.html}
 }
@@ -21,9 +26,9 @@
 data(COBRE.data)
 }
 \description{
-This dataset contains fMRI brain networks of 124  subjects
+This dataset contains functional connectivity brain networks of 124 subjects
 and corresponding class labels indicating schizophrenia status (70 healthy controls and 54
-schizophrenic subjects).
+schizophrenic subjects) obtained from the COBRE dataset.
 }
 \examples{
 data(COBRE.data)
@@ -32,5 +37,9 @@ plot_adjmatrix(COBRE.data$X.cobre[1,])
 }
 \references{
 \insertRef{Aine2017}{graphclass}
+
+\insertRef{relion2017network}{graphclass}
+
+\insertRef{power2011functional}{graphclass}
 }
 \keyword{datasets}

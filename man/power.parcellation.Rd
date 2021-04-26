@@ -4,13 +4,15 @@
 \name{power.parcellation}
 \alias{power.parcellation}
 \title{Node assignments of the Power parcellation}
-\format{\code{power.parcellation} is a data frame in which the nodes represent nodes. The data frame has three columns:
+\format{
+\code{power.parcellation} is a data frame in which the nodes represent nodes. The data frame has three columns:
 \describe{
   \item{Master.Assignment}{Brain system number}
   \item{Color}{Color representing the system.}
   \item{Suggested.System}{Suggested brain system.}
   
-}}
+}
+}
 \source{
 \url{http://www.nil.wustl.edu/labs/petersen/Resources_files/Consensus264.xls}
 }

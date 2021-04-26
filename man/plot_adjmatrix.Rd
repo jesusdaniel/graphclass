@@ -5,10 +5,16 @@
 \alias{plot_adjmatrix}
 \title{Plots a vectorized adjacency matrix.}
 \usage{
-plot_adjmatrix(edgevalues, type = c("undirected", "directed"),
-  edgetype = c("real", "prob", "binary"), communities = NULL,
-  community_labels = NULL, main = "", axislabel = "Nodes",
-  colorlims = NULL)
+plot_adjmatrix(
+  edgevalues,
+  type = c("undirected", "directed"),
+  edgetype = c("real", "prob", "binary"),
+  communities = NULL,
+  community_labels = NULL,
+  main = "",
+  axislabel = "Nodes",
+  colorlims = NULL
+)
 }
 \arguments{
 \item{edgevalues}{Edge values of the adjacency matrix. The argument can be either a square adjacency matrix, or a 

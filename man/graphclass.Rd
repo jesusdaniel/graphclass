@@ -7,14 +7,31 @@
 \alias{plot.graphclass}
 \title{Regularized logistic regression classifier for networks.}
 \usage{
-graphclass(X = NULL, Y = NULL, type = c("intersection", "union",
-  "groups", "fusion"), ...)
+graphclass(
+  X = NULL,
+  Y = NULL,
+  type = c("intersection", "union", "groups", "fusion"),
+  ...
+)
 
-\method{graphclass}{default}(X = NULL, Y = NULL, Xtest = NULL,
-  Ytest = NULL, Adj_list = NULL, type = c("intersection", "union",
-  "groups", "fusion"), lambda = 0, rho = 0, gamma = 1e-05,
-  params = NULL, id = "", verbose = F, D = NULL, Groups = NULL,
-  G_penalty_factors = NULL, ...)
+\method{graphclass}{default}(
+  X = NULL,
+  Y = NULL,
+  Xtest = NULL,
+  Ytest = NULL,
+  Adj_list = NULL,
+  type = c("intersection", "union", "groups", "fusion"),
+  lambda = 0,
+  rho = 0,
+  gamma = 1e-05,
+  params = NULL,
+  id = "",
+  verbose = F,
+  D = NULL,
+  Groups = NULL,
+  G_penalty_factors = NULL,
+  ...
+)
 
 \method{plot}{graphclass}(object, ...)
 }
@@ -71,7 +88,7 @@ The function  \code{graphclass} fits a regularized logistic regression to classi
 with \eqn{N} labeled nodes and corresponding responses. The classifier fits a matrix of coefficients \eqn{B\in{R}^{N\times N}},
 in which \eqn{B_{ij}} indicates the coefficient corresponding to the edge \eqn{(i,j)}.
 
-The argument \code{type} provides options to choose the penalty function.
+ The argument \code{type} provides options to choose the penalty function.
 If \code{type = "intersection"} or \code{"union"}, the penalty corresponds to the node selection penalty defined as
 \deqn{\Omega(B) = \lambda \left(\sum_{i=1}^N\sqrt{\sum_{j=1}^N B_{ij}^2} + \rho \sum_{i=1}^N\sum_{j=1}^N|B_{ij}|\right).}
 When \code{type = "intersection"}, a symmetric restriction on  \eqn{B} is enforced, and the penalty promotes subgraph selection.
@@ -106,6 +123,9 @@ plot(gc)
 
 # 5-fold cross validation
 fold_index <- (1:length(Y) \%\% 5) + 1
+
+# Make penalty matrix in advance to save time
+D263 <- construct_D(nodes = 263)
 
 gclist <- list()
 for(fold in 1:5) {

@@ -4,26 +4,37 @@
 \name{UMich.data}
 \alias{UMich.data}
 \title{fMRI brain networks of the UMich dataset}
-\format{\code{UMich.data} is a list with two elements
+\format{
+\code{UMich.data} is a list with two elements
 \describe{
-  \item{X.cobre}{A matrix containing the upper triangular part of networks. Each row represents a subject,
-  and the columns represent edges. The edge weights represent the Fisher-transformed correlation 
-  between the
-  fMRI time series of the nodes. Each network has 264 labeled nodes and 34716 different edges.
-  For a description of the preprocessing steps to obtain the network edge weights, see \insertCite{relion2017network;textual}{graphclass}.
-  }.
+  \item{X.cobre}{A matrix containing the upper triangular part of the networks in column major order and without the
+  diagonal entries. The networks are composed of 264 nodes obtained from the Power parcellation \insertCite{power2011functional}{graphclass} 
+  and 34716 different edges. Each row corresponds to a subject in the data,
+  and the columns correspond to edges in the networks. The edge weights are the Fisher-transformed correlations 
+  between the fMRI time series of the nodes. Nuisance covariates like age, gender, motion (meanFD and meanFDquad) and handedness
+  have been regressed out. For a description of the preprocessing steps to obtain the network edge weights, 
+  see \insertCite{relion2017network;textual}{graphclass}.
+  }
   \item{Y.cobre}{Class labels of the subjects in the dataset.  \code{Y = 1} represents schizophrenia status.}
-}}
+}
+}
 \usage{
 data(UMich.data)
 }
 \description{
-The UMich dataset contains the fMRI brain networks of 78  subjects
-and class labels of schizophrenia disease status.
+This dataset contains functional connectivity brain networks of 79 subjects
+and corresponding class labels indicating schizophrenia status (40 healthy controls and 39
+schizophrenic subjects). The fMRI data used to obtain these networks were collected by Professor
+Stephen F. Taylor's lab at the University of Michigan.
 }
 \examples{
 data(UMich.data)
 plot_adjmatrix(UMich.data$X.umich[1,])
 
+}
+\references{
+\insertRef{relion2017network}{graphclass}
+
+\insertRef{power2011functional}{graphclass}
 }
 \keyword{datasets}
