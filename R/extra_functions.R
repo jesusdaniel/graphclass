@@ -6,10 +6,12 @@
 #' 
 #' @param beta Vectorized adjacency matrix. If the network is undirected,
 #' the vector is assumed to represent the upper triangular part of the adjacency 
-#' matrix in column major order. For undirected network, the vector contains the
-#' entries ordered by column and excluding the diagonal elements.
+#' matrix in column major order. For directed networks, the vector contains the
+#' entries ordered by column, and excluding the diagonal elements if \code{selfloops = FALSE}.
 #' @param  type Specifies whether the vector represents an \code{undirected}
 #' or \code{directed} network. Default is \code{undirected}.
+#' @param selfloops This parameter indicates whether self loops are included in the
+#' entries of a vector. Default is \code{FALSE}.
 #' 
 #' @return Adjacency matrix. 
 #' 
@@ -22,21 +24,30 @@
 #' 
 #' @encoding UTF-8
 #' @importFrom Rdpack reprompt
-get_matrix <- function(beta, type=c("undirected", "directed")) {
+get_matrix <- function(beta, type=c("undirected", "directed"), selfloops = FALSE) {
   type <- match.arg(type)
-  if(type=="undirected") {
+  if(type=="undirected" & !selfloops) {
     NODES <- (1+sqrt(1+8*length(beta)))/2
     Adj_matr = array(0,dim = c(NODES, NODES))
     Adj_matr[upper.tri(Adj_matr)] <- beta
     Adj_matr <- Adj_matr + t(Adj_matr)  
-  }else{if(type=="directed") {
+  }else{if(type=="directed" & !selfloops) {
     NODES <- (1+sqrt(1+8*length(beta)/2))/2
     Adj_matr = array(T,dim = c(NODES, NODES))
     diag(Adj_matr) = F
     Adj_matr[Adj_matr] = beta
+  }else{if(type=="undirected" & selfloops){
+    NODES <- (-1+sqrt(1+8*length(beta)))/2
+    Adj_matr = array(0,dim = c(NODES, NODES))
+    Adj_matr[upper.tri(Adj_matr, diag = TRUE)] <- beta
+    Adj_matr <- Adj_matr + t(Adj_matr)  
+    diag(Adj_matr) = diag(Adj_matr)/2
+  }else{if(type=="directed" & selfloops){
+    NODES <- sqrt(length(beta))
+    Adj_matr = array(beta,dim = c(NODES, NODES))
   }else{
     stop("The value of type should be one between \"directed\" and \"undirected\"")
-  }}
+  }}}}
   return(Adj_matr)
 }
 
@@ -47,6 +58,8 @@ get_matrix <- function(beta, type=c("undirected", "directed")) {
 #' @param A Adjacency matrix of a network.
 #' @param  type Parameter to specify whether the adjacency matrix represents an \code{undirected}
 #' or \code{directed} network. Default is \code{undirected}.
+#' @param selfloops This parameter indicates whether self loops are included in the
+#' entries of a vector. Default is \code{FALSE}.
 #' 
 #' @return A vector containing the upper triangular part of an
 #'  adjacency matrix (if the graph is undirected) or adjacency entry
@@ -57,13 +70,13 @@ get_matrix <- function(beta, type=c("undirected", "directed")) {
 #' 
 #' @encoding UTF-8
 #' @importFrom Rdpack reprompt
-matrix_to_vec <- function(A, type=c("undirected", "directed")) {
+matrix_to_vec <- function(A, type=c("undirected", "directed"), selfloops = FALSE) {
   type <- match.arg(type)
   if(type=="undirected") {
-    beta <- A[upper.tri(A)]
+    beta <- A[upper.tri(A, diag = selfloops)]
   }else{if(type=="directed") {
     mat <- matrix(T, ncol = ncol(A), nrow = nrow(A))
-    diag(mat) <- F
+    diag(mat) <- selfloops
     beta <- as.vector(A[mat])
   }else{
     stop("The value of type should be one between \"directed\" and \"undirected\"")

@@ -1,23 +1,27 @@
-#' Plots a vectorized adjacency matrix.
+#' Plots an adjacency matrix.
 #'
-#' Draws a plot of the adjacency matrix represented by a vector
+#' Draws a plot of the adjacency matrix represented by a vector or a matrix
 #' using the function \code{levelplot} of the \code{lattice} package.
 #' 
 #' @export
 #' 
 #' @param edgevalues Edge values of the adjacency matrix. The argument can be either a square adjacency matrix, or a 
 #' vectorized adjacency matrix. For undirected networks, the vector should
-#' contain the upper triangular part in column-major order. For directed networks use both
+#' contain the upper triangular part in column-major order. For directed networks, the vector should contain all
+#' entries of the matrix in column major order.
 #' @param type If \code{edgevalues} is a vector, this parameter specifies whether the vector represents 
 #' an \code{undirected} or \code{directed} network. Default is \code{undirected}.
-#' @param edgetype Specify the type of edge values. For real-valued edges, \code{type = "real"}.
-#' If the edges are between 0 and 1, \code{tipe = "prob"}. For binary edges, \code{type = "binary"}.
+#' @param edgetype This parameter specifies the type of edge values for the scale color of the plot. 
+#' For real-valued edges, \code{type = "real"}.
+#' If the edges are between 0 and 1, \code{type = "prob"}. For binary edges, \code{type = "binary"}.
 #' @param communities Optional argument to specify a list in which each element contains an array indicating
 #' the indexes of the nodes on each community.
 #' @param community_labels Labels for each community. The array should have the same length than \code{communities}.
 #' @param main Title of the plot
 #' @param axislabel Label for the axes.
-#' @param colorlims An array with two elements indicating the minimum and maximum value in the color bar
+#' @param colorlims An array with two elements indicating the minimum and maximum value in the color bar.
+#' @param selfloops If the \code{edgevalues} parameter is a vector, indicates whether self loops are included in the
+#' entries of a vector. Default is \code{FALSE}.
 #' 
 #' @return An objected returned by the function \code{levelplot} of the \code{lattice} package.
 #' 
@@ -45,28 +49,25 @@ plot_adjmatrix <- function(edgevalues, type=c("undirected", "directed"),
                            communities = NULL, 
                            community_labels = NULL, 
                            main= "", axislabel = "Nodes",
-                           colorlims = NULL) {
+                           colorlims = NULL,
+                           selfloops = FALSE) 
+  {
+  
   type <- match.arg(type)
   require(lattice)
   require(Matrix)
   edgetype <- match.arg(edgetype)
+  
   if(is.null(dim(edgevalues))) {
-    if(type=="undirected") {
-      NODES <- (1+sqrt(1+8*length(edgevalues)))/2
-    }else{if(type=="directed") {
-      NODES <- (1+sqrt(1+8*length(edgevalues)/2))/2
-    }else{
-      stop("The value of type should be \"undirected\" or \"directed\"")
-    }}
-    Adj_matr <- as.matrix(get_matrix(edgevalues, type))
+    Adj_matr <- as.matrix(get_matrix(edgevalues, type, selfloops))
   }else{
     Adj_matr <- as.matrix(edgevalues)
-    NODES <- ncol(Adj_matr)
   }
+  NODES <- ncol(Adj_matr)
   
-  tckspace <- round(NODES/5, -floor(log10(NODES/5)))
+  tckspace <- round(NODES/5, max(0, floor(log10(NODES/5))))
   
-  cuts <- 100
+  cuts <- 1000
   colorkey <- TRUE
   #edgetype = real----------------------------------------
   atneg <- 0
@@ -89,7 +90,7 @@ plot_adjmatrix <- function(edgevalues, type=c("undirected", "directed"),
     col.regions.pos <- rgb((0:cuts)/cuts, green = 0, blue = 0,red = 1)
   }
   atval = unique(c(atneg, 0, atpos))
-  col.vals = unique(c(col.regions.neg, rgb(red = 1,green = 1, blue = 1), col.regions.pos))
+  col.vals = (c(col.regions.neg, rgb(red = 1,green = 1, blue = 1), col.regions.pos))
   #edgetype = prob----------------------------------------
   if(edgetype == "prob") {
     atval = seq(0,1,length.out =cuts)
@@ -147,10 +148,9 @@ plot_adjmatrix <- function(edgevalues, type=c("undirected", "directed"),
               colorkey = colorkey,
               scales = list(tck = c(1,0), 
                             x = list(at=seq(0,ncol(Adj_matr), by = tckspace)),
-                            y = list(at = NODES-tckspace- seq(0,ncol(Adj_matr), by = tckspace),
+                            y = list(at = NODES + 1 - tckspace - seq(0,ncol(Adj_matr), by = tckspace),
                                      labels = (seq(tckspace,ncol(Adj_matr),tckspace)))))
   }
-                            
 }
 
 
