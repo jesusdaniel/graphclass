@@ -65,7 +65,7 @@ plot_adjmatrix <- function(edgevalues, type=c("undirected", "directed"),
   }
   NODES <- ncol(Adj_matr)
   
-  tckspace <- round(NODES/5, max(0, floor(log10(NODES/5))))
+  tckspace <- max(1, round(NODES/5, max(0, floor(log10(NODES/5)))))
   
   cuts <- 1000
   colorkey <- TRUE
@@ -131,7 +131,7 @@ plot_adjmatrix <- function(edgevalues, type=c("undirected", "directed"),
     }
     nodeorder = unlist(communities)
     Adj_matr <- Adj_matr[nodeorder, nodeorder]
-    Adj_matr <- Adj_matr[,seq(from=ncol(Adj_matr),to=1,by=-1)] #reversing the columns
+    Adj_matr <- Adj_matr[,seq(from=NODES,to=1,by=-1)] #reversing the columns
     levelplot(Adj_matr, at = atval,
               xlab = axislabel, ylab = axislabel,
               main = main,
@@ -140,14 +140,14 @@ plot_adjmatrix <- function(edgevalues, type=c("undirected", "directed"),
                        panel = panel_func,
                        scales=scales_list)
   }else{
-    Adj_matr <- Adj_matr[,seq(from=ncol(Adj_matr),to=1,by=-1)] #reversing the columns
+    Adj_matr <- Adj_matr[,seq(from=NODES,to=1,by=-1)] #reversing the columns
     levelplot(Adj_matr, at = atval,
               xlab = axislabel, ylab = axislabel,
               col.regions = col.vals,
               main = main,
               colorkey = colorkey,
               scales = list(tck = c(1,0), 
-                            x = list(at=seq(0,ncol(Adj_matr), by = tckspace)),
+                            x = list(at=seq(0,NODES, by = tckspace)),
                             y = list(at = NODES + 1 - tckspace - seq(0,ncol(Adj_matr), by = tckspace),
                                      labels = (seq(tckspace,ncol(Adj_matr),tckspace)))))
   }
